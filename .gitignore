@@ -1,0 +1,8 @@
+*.swp
+*.tar.gz
+__pycache__/
+/inventory/.one-deploy/
+/inventory/*.yml
+!/inventory/example.yml
+.vscode
+.ansible/

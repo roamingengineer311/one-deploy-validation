@@ -1,0 +1,6 @@
+---
+exclude_paths:
+  - vendor/
+
+skip_list:
+  - name[play]
