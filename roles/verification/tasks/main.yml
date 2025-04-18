@@ -450,7 +450,7 @@
   vars:
     date: "{{ '%Y-%m-%d %H:%M:%S' | strftime(ansible_date_time.epoch) }}"  
   template:
-    src: report_template.j2
+    src: appendix-cloud-report.j2 
     dest: /tmp/cloud_verification_report.html
   ignore_errors: True
 
