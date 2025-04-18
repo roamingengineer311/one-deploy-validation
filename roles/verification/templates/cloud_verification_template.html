@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+    	<link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet">
+	<style type="text/css">
+		body {font-family: 'Ubuntu', sans-serif;}
+		@page { size: 8.5in 11in; margin-left: 1in; margin-right: 1in; margin-bottom: 0.5in }
+		p { line-height: 115%; text-align: left; orphans: 0; widows: 0; margin-bottom: 0.1in; direction: ltr; background: transparent }
+		h1 { line-height: 100%; text-align: justify; page-break-inside: auto; orphans: 0; widows: 0; margin-top: 0.33in; margin-bottom: 0.08in; direction: ltr; background: transparent; page-break-before: auto; page-break-after: auto }
+		h1.western { font-size: 14pt; font-weight: bold }
+		h1.cjk { font-size: 14pt; font-weight: bold }
+		h1.ctl { font-size: 14pt }
+		h2 { line-height: 100%; text-align: justify; page-break-inside: auto; orphans: 0; widows: 0; margin-top: 0.25in; margin-bottom: 0.06in; direction: ltr; background: transparent; page-break-before: auto; page-break-after: auto }
+		h2.western { font-size: 12pt; font-weight: bold }
+		h2.cjk { font-size: 12pt; font-weight: bold }
+		h2.ctl { font-size: 12pt }
+		a:link { color: #000080; text-decoration: underline }
+	</style>
+</head>
+<body lang="en-US" link="#000080" vlink="#800000" bgcolor="#ffffff" dir="ltr">
+<div title="header"><p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+	<br/>
+
+	</p>
+	<table width="624" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+		<col width="298"/>
+		<col width="298"/>
+		<tr valign="top">
+			<td width="298" style="background: transparent; border: none; padding: 0in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+				<img src="Cloud%20Verification%20Report%20-%20CUSTOMER%20-%20v1.0r20240611_html_a806db7a.png" name="image1.png" align="bottom" width="94" height="34" border="0"/>
+</p>
+			</td>
+			<td width="298" style="background: transparent; border: none; padding: 0in"><p align="right" style="margin-left: -0.96in; margin-right: 0.01in">
+				<b>CONFIDENTIAL-NOT FOR DISTRIBUTION</b></p>
+			</td>
+		</tr>
+	</table>
+	<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0.96in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+	<br/>
+
+	</p>
+</div><p align="left" style="line-height: 100%; page-break-inside: auto; orphans: 0; widows: 0; margin-top: 0.33in; margin-bottom: 0.08in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto"><a name="_rjde11ut35j5"></a>
+<font size="7" style="font-size: 36pt"><b><font size="6" style="font-size: 24pt">Cloud
+Verification Report</font></b></font></p>
+<p style="margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p align="justify" style="line-height: 115%; page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<b>Task</b>: Verification of an OpenNebula Cloud deployment</p>
+<p style="margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<b>Customer</b>: XXXXX</p>
+<p style="margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<b>Date</b>: XXXXX</p>
+<p style="margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<b>Version</b>: 0.1<!-- There are two versions. 0.1 with the planning and 1.0 with the results and recommendations --></p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<font color="#353835"><font size="3" style="font-size: 12pt"><b>Abstract</b></font></font></p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+</p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+This report describes the actions to verify the configuration and
+operational level of the OpenNebula cloud. As a result of this
+analysis the operational level of each component is established, if
+needed specific configuration updates are recommended.</p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<br/>
+</p>
+<p style="margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<font size="3" style="font-size: 12pt"><b>Revision History</b></font></p>
+<p style="margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+</p>
+<table width="626" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="51"/>
+	<col width="96"/>
+	<col width="108"/>
+	<col width="313"/>
+	<tr>
+		<td width="51" valign="top" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<font color="#007ba8"><b>Version</b></font></p>
+		</td>
+		<td width="96" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<font color="#007ba8"><b>Date</b></font></p>
+		</td>
+		<td width="108" valign="top" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<font color="#007ba8"><b>Author</b></font></p>
+		</td>
+		<td width="313" valign="top" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<font color="#007ba8"><b>Comments</b></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="51" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<font face="Droid Sans">0.1</font></p>
+		</td>
+		<td width="96" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			XXXXXXX</p>
+		</td>
+		<td width="108" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			OpenNebula Systems</p>
+		</td>
+		<td width="313" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			First version of the report with the planned verification actions</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="51" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<br/>
+
+			</p>
+		</td>
+		<td width="96" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<br/>
+
+			</p>
+		</td>
+		<td width="108" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p>
+			<br/>
+
+			</p>
+		</td>
+		<td width="313" style="background: transparent; border: 1.00pt solid #666666; padding: 0.07in"><p style="border: none; padding: 0in; background: transparent">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+<font size="3" style="font-size: 12pt"><b>Table of Contents</b></font></p>
+<div id="Table of Contents1" dir="ltr"><p align="justify" style="line-height: 100%; page-break-inside: auto; orphans: 0; widows: 0; margin-top: 0.14in; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+	<a href="#_tbdoe28d7ie2"><font color="#434343"><b>1. Introduction</b></font></a></p>
+	<p align="justify" style="line-height: 100%; page-break-inside: auto; orphans: 0; widows: 0; margin-top: 0.14in; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+	<a href="#_cgnw9t1vnxc8"><font color="#434343"><b>2. Verification of
+	OpenNebula Core Services</b></font></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_a5jn01ypzn0l"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">2.1
+	OpenNebula core daemon (oned)</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_gby8zefozte3"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">2.2
+	High Availability and Federation</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_z9iw20nybv8w"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">2.3
+	Scheduler</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_2u1khxewpgp2"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">2.4
+	OpenNebula Gate</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_cau7l66p6toz"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">2.5
+	OpenNebula Flow</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_bfzotgtyqnhh"><span style="font-variant: normal"><font color="#434343"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><b><span style="background: transparent">3.
+	Verification of OpenNebula Sunstone</span></b></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_41i110p00hm4"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">3.1
+	Sunstone Backend</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_a6brxlrgtvi3"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">3.2
+	Web Client</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_v4bbz23j3q4a"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">3.3
+	OpenNebula Systems Support</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_kmrpsfxfzg9y"><span style="font-variant: normal"><font color="#434343"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><b><span style="background: transparent">4.
+	Verification of the Infrastructure</span></b></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_bivkt6kf2bz5"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">4.1
+	Virtualization Host</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_6e18vuy1jblb"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">4.2
+	Networking</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+	<a href="#_5jm3y4nvsie2"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">4.3
+	Storage</span></span></span></font></font></span></font></span></a></p>
+	<p style="line-height: 100%; margin-left: 0.25in; margin-top: 0.04in; margin-bottom: 0.06in; page-break-before: auto; page-break-after: auto">
+	<a href="#_lmke3g5e5m7c"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Ubuntu"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal"><span style="background: transparent">4.4
+	MarketPlace &amp; Context</span></span></span></font></font></span></font></span></a></p>
+</div></br>
+<h1 class="western"><a name="_tbdoe28d7ie2"></a>1. Introduction</h1>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+The following table summarizes the main characteristics of the cloud
+that will be verified under this service contract.</p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+</p>
+<table width="646" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="132"/>
+	<col width="484"/>
+	<tr valign="top">
+		<td width="132" height="12" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Version</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			OpenNebula 6.2.0</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="13" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Federation</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			Single Zone 
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="13" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>High Availability</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222">HA cluster with 2 servers</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="13" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Front-ends</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222">2 hosts will be upgraded and 1 host will be
+			added</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="13" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Networking</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222">802.1q</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="13" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Storage</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222">StorPool driver</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="13" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Other Components</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222">None</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" height="12" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222"><b>Applications</b></font></p>
+		</td>
+		<td width="484" style="background: transparent; border: 1px solid #000000; padding: 0.07in"><p>
+			<font color="#222222">OpenNebula command line tool.</font></p>
+		</td>
+	</tr>
+</table>
+<p align="center" style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<b>Table 1: </b>OpenNebula deployment summary</p></br></br>
+<h1 class="western"><a name="_cgnw9t1vnxc8"></a>2. Verification of
+OpenNebula Core Services</h1></br>
+<h2 class="western"><a name="_a5jn01ypzn0l"></a>2.1 OpenNebula core
+daemon (oned)</h2>
+<table width="656" cellpadding="3" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="99"/>
+	<col width="181"/>
+	<col width="90"/>
+	<col width="260"/>
+	<tr valign="top">
+		<td width="99" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="181" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="90" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="260" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="3" width="99" height="21" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<b>xml-rpc API</b></p>
+		</td>
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			Endpoint is reachable from different networks</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			Authentication is properly configured for oneadmin</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			Port and IP for service is properly configured</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td width="99" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<b>Service start &amp; shutdown</b></p>
+		</td>
+		<td width="181" style="border: 1px solid #000000; padding: 0.03in"><p align="left">
+			oned service starts and shutdown cleanly. 
+			</p>
+		</td>
+		<td width="90" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="2" width="99" height="21" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<b>Database</b></p>
+		</td>
+		<td width="181" style="background: transparent; border-top: 1.00pt solid #000000; border-bottom: 1px solid #000000; border-left: 1.00pt solid #000000; border-right: 1px solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			Storage space in file system 
+			</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border-top: 1.00pt solid #000000; border-bottom: 1px solid #000000; border-left: 1.00pt solid #000000; border-right: 1px solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			MySQL performance configuration</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td width="99" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<b>Private repositories</b></p>
+		</td>
+		<td width="181" style="background: transparent; border-top: 1px solid #cccccc; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 0.03in"><p align="left">
+			subscription repos are configured</p>
+		</td>
+		<td width="90" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western"><a name="_xf1z50web2x2"></a><br/>
+<br/>
+
+</h2>
+<h2 class="western"><a name="_gby8zefozte3"></a>2.2 High Availability
+and Federation</h2>
+<table width="656" cellpadding="3" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="99"/>
+	<col width="181"/>
+	<col width="90"/>
+	<col width="260"/>
+	<tr valign="top">
+		<td width="99" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="181" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="90" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="260" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="4" width="99" height="21" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Configuration</b></p>
+		</td>
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Correct value of RAFT parameters</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			RAFT hook parameters</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			VM-HA feature</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Shared filesystem</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td rowspan="3" width="99" height="20" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Cluster Health</b></p>
+		</td>
+		<td width="181" style="border: 1px solid #000000; padding: 0.03in"><p align="left">
+			 State synchronization</p>
+		</td>
+		<td width="90" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" valign="top" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border-top: 1.00pt solid #000000; border-bottom: 1px solid #000000; border-left: 1.00pt solid #000000; border-right: 1px solid #000000; padding: 0.07in"><p align="left">
+			Federation state synchronization</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="181" style="background: transparent; border-top: 1.00pt solid #000000; border-bottom: 1px solid #000000; border-left: 1.00pt solid #000000; border-right: 1px solid #000000; padding: 0.07in"><p align="left">
+			Leader election</p>
+		</td>
+		<td width="90" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="260" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western"><a name="_e7vy4ntondq8"></a><br/>
+<br/>
+</h2>
+</p>
+<h2 class="western"><a name="_z9iw20nybv8w"></a>2.3 Scheduler</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Service start &amp; shutdown</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Scheduler is correctly started together with oned</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western"><a name="_jwlrd410fkjh"></a><br/>
+<br/>
+
+</h2>
+<h2 class="western"><a name="_2u1khxewpgp2"></a>2.4 OpenNebula Gate</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Service start &amp; shutdown</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			OpenNebula Gate service starts and shutdown</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Reachability</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+			OpenNebula Gate binds to the right port/address</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western"><a name="_dv25pfnnr7q4"></a><br/>
+<br/>
+
+</h2>
+<h2 class="western"><a name="_cau7l66p6toz"></a>2.5 OpenNebula Flow</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Service start &amp; shutdown</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			OpenNebula Flow service starts and shutdown</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Reachability</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			OpenNebula Flow binds to the right port/address</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table></br></br>
+<h1 class="western"><a name="_bfzotgtyqnhh"></a>3. Verification of
+OpenNebula Sunstone</h1></br>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+</p>
+<h2 class="western"><a name="_41i110p00hm4"></a>3.1 Sunstone Backend</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Service start &amp; shutdown</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Sunstone service starts and shutdown</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Reachability</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Sunstone binds to the right port/address</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>SSL Proxy</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Proxy and certificates are correctly configured</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western"><a name="_ld54k1hynopo"></a><br/>
+<br/>
+
+</h2>
+<h2 class="western"><a name="_a6brxlrgtvi3"></a>3.2 Web Client</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Login</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Login process works with the configured authentication 
+			</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="2" width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Views</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Views are properly configured</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Zones can be selected and changed</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western"><a name="_qjiy0z9mbed3"></a><br/>
+<br/>
+
+</h2>
+<h2 class="western"><a name="_v4bbz23j3q4a"></a>3.3 OpenNebula
+Systems Support</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Zendesk API</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Support tab is operational to create and manage issues</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Subscription</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Supported tag is operational</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table></br></br>
+<h1 class="western"><a name="_kmrpsfxfzg9y"></a>4. Verification of
+the Infrastructure</h1>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<h2 class="western"><a name="_bivkt6kf2bz5"></a>4.1 Virtualization
+Host</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="3" width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Monitoring</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Hosts are correctly monitored</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			VMs are correctly monitored</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Configuration attributes (frequency and log retention)</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="3" width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Hypervisor</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Virtualization services starts automatically</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Virtualization properly configured for oneadmin account</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Hypervisor configuration options tuning</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+The configuration is verified for the following hosts:<!-- To complete when having access to the system --></p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<table width="817" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="257"/>
+	<col width="258"/>
+	<col width="257"/>
+	<tr valign="top">
+		<td width="257" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Hostname</b></font></font></p>
+		</td>
+		<td width="258" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="257" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comment</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="257" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="258" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="257" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="257" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="258" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="257" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="257" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="258" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="257" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<h2 class="western"><a name="_6e18vuy1jblb"></a>4.2 Networking</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Interfaces</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Bridge &amp; interfaces properly configured</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Security Groups</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Security group rules are operational</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+The configuration is verified for the following virtual networks:<!-- To complete when having access to the system --></p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<table width="749" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="235"/>
+	<col width="236"/>
+	<col width="235"/>
+	<tr valign="top">
+		<td width="235" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Virtual
+			Network</b></font></font></p>
+		</td>
+		<td width="236" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="235" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comment</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="235" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="236" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="235" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="235" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="236" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="235" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="235" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="236" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="235" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<h2 class="western"><a name="_5jm3y4nvsie2"></a>4.3 Storage</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Monitor</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Storage usage is monitored</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td rowspan="2" width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Images</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Images are properly registered</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			Images are transferred and can be used in the hosts</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+The configuration is verified for the following datastores:<!-- To complete when having access to the system --></p>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<table width="749" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="235"/>
+	<col width="236"/>
+	<col width="235"/>
+	<tr valign="top">
+		<td width="235" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Datastore</b></font></font></p>
+		</td>
+		<td width="236" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="235" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comment</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="235" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="236" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="235" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="235" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="236" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="235" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="235" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="236" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="235" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<h2 class="western"><a name="_lmke3g5e5m7c"></a>4.4 MarketPlace &amp;
+Context</h2>
+<table width="656" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+	<col width="91"/>
+	<col width="173"/>
+	<col width="82"/>
+	<col width="252"/>
+	<tr valign="top">
+		<td width="91" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Component</b></font></font></p>
+		</td>
+		<td width="173" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Verification
+			Point</b></font></font></p>
+		</td>
+		<td width="82" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Result</b></font></font></p>
+		</td>
+		<td width="252" bgcolor="#666666" style="background: #666666; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<font color="#ffffff"><font size="3" style="font-size: 12pt"><b>Comments</b></font></font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Monitor</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			MarketPlace appliances are listed and monitored</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="13" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>Images Access</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			MarketPlace appliances can be downloaded</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="91" height="12" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<b>VM Context</b></p>
+		</td>
+		<td width="173" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			VMs can access context information</p>
+		</td>
+		<td width="82" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+		<td width="252" style="background: transparent; border: 1.00pt solid #000000; padding: 0.07in"><p align="left">
+			<br/>
+
+			</p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in; page-break-before: auto; page-break-after: auto">
+<br/>
+
+</p>
+<div title="footer"><p style="page-break-inside: auto; orphans: 0; widows: 0; margin-top: 0.46in; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+	<br/>
+
+	</p>
+	<table width="624" cellpadding="7" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
+		<col width="210"/>
+		<col width="144"/>
+		<col width="228"/>
+		<tr valign="top">
+			<td width="210" style="background: transparent; border: none; padding: 0in"><p style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+				<font face="Ubuntu"><font size="1" style="font-size: 8pt">©
+				</font></font><font size="1" style="font-size: 8pt">OpenNebula
+				Systems</font><font face="Ubuntu"><font size="1" style="font-size: 8pt">
+				S. L.</font></font><font size="1" style="font-size: 8pt"> </font><font face="Ubuntu"><font size="1" style="font-size: 8pt">20</font></font><font size="1" style="font-size: 8pt">22</font></p>
+			</td>
+			<td width="144" style="background: transparent; border: none; padding: 0in"><p align="center" style="page-break-inside: auto; orphans: 0; widows: 0; border: none; padding: 0in; background: transparent; page-break-after: auto">
+				                  
+			</td>
+			<td width="228" style="background: transparent; border: none; padding: 0in"><p align="right" style="page-break-inside: auto; orphans: 0; widows: 0; margin-left: -0.14in; border: none; padding: 0in; background: transparent; page-break-after: auto">
+				<font size="1" style="font-size: 8pt">Cloud Verification Report</font></p>
+			</td>
+		</tr>
+	</table>
+	<p align="left" style="page-break-inside: auto; orphans: 0; widows: 0; margin-bottom: 0in; border: none; padding: 0in; background: transparent; page-break-before: auto; page-break-after: auto">
+	<br/>
+
+	</p>
+</div>
+</body>
+</html>
