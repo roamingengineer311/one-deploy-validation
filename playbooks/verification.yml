@@ -5,3 +5,13 @@
   # Include cloud verification framework role
   roles:
     - role: verification
+      vars:
+        run_core_services_verification: false 
+
+# Run network tests on the hypervisor hosts
+- hosts: "{{ node_group | d('node') }}"
+  roles:
+    - role: verification
+      vars:
+        run_core_services_verification: false
+        run_network_benchmark: true

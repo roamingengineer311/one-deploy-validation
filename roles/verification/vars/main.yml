@@ -11,3 +11,8 @@ test_gw: '10.0.0.1'
 
 # Marketplace App name for test VM instantiation
 test_vm_name: 'Alpine Linux 3.21'
+
+# PArameters for iperf network benchmarking
+iperf:
+  port: 5201
+  test_time: 10
