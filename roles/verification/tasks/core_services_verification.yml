@@ -9,7 +9,14 @@
     gather_subset:
     - min
 
-      # !!! Might be reasonable to discuss alternative approach for this check
+- name: Install ping dependencies
+  ansible.builtin.package:
+    name:
+      - jc
+      - jq
+    state: present
+
+# !!! Might be reasonable to discuss alternative approach for this check
 - name: Validate xml-rpc API
   ansible.builtin.shell: >
     oneuser list
@@ -53,24 +60,28 @@
     verification_result: "{{ verification_result | combine({'Oned version': oned_version.stdout}) }}"
 
 
-- name: Debug
-  debug:
-    var: verification_result
-
 - name: Printout oned version
   debug:
     msg: "Installed oned version: {{ oned_version.stdout }}"
 
-- name: Verify OpenNebula private repos
+# Modify for Debian and RH-based distros        
+- name: Verify OpenNebula private repos on the Debian-based OS
   ansible.builtin.shell: >
     cd  /etc/apt/sources.list.d/ && grep -Rn opennebula . | awk '{print $2}'
   register: repos_list
   failed_when: "repos_list.rc != 0"
+  when: ansible_os_family == "Debian"
+
+- name: Verify OpenNebula private repos on the RH-based OS
+  ansible.builtin.shell: >
+    cd  /etc/yum.repos.d/ && grep -Rn opennebula . | grep baseurl | awk -F '@' '/1/ {print $2}'
+  register: repos_list
+  failed_when: "repos_list.rc != 0"
+  when: ansible_os_family == "RedHat"
 
 - name: Save OpenNebula repositories
   set_fact:
     verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': repos_list.stdout}) }}"
-
 
 - name: Verify OpenNebula scheduler can contact oned
   ansible.builtin.shell: |
@@ -109,7 +120,7 @@
 
 - name: Verify one-gate listen & port on the server
   ansible.builtin.shell: >
-    ss -tlp | grep $(grep :port: /etc/one/onegate-server.conf | awk {'print $2'})
+    ss -tlpn | grep $(grep :port: /etc/one/onegate-server.conf | awk {'print $2'})
   register: onegate_service
 
 - name: Save one-gate listen & port on the server
@@ -142,7 +153,7 @@
 
 - name: Verify oneflow listen & port on the server
   ansible.builtin.shell: >
-    ss -tlp | grep -o $(grep :port: /etc/one/oneflow-server.conf | awk {'print $2'})
+    ss -tlpn | grep -o $(grep :port: /etc/one/oneflow-server.conf | awk {'print $2'})
   register: oneflow_status
   failed_when: "oneflow_status.rc != 0"
     
@@ -174,7 +185,7 @@
 
 - name: Fireedge service listens on the server
   ansible.builtin.shell: >
-    ss -tlp | grep $(grep -A1 'FireEdge server port' /etc/one/fireedge-server.conf | grep port: | awk '{print $2}')
+    ss -tlpn | grep $(grep -A1 'FireEdge server port' /etc/one/fireedge-server.conf | grep port: | awk '{print $2}')
   register: firedge_socket
   failed_when: "firedge_socket.rc != 0"
 
@@ -200,48 +211,35 @@
 
 - name: Get hosts list
   set_fact:
-    hosts_list: "{{ onehost_list.stdout | from_json | json_query('HOST_POOL.HOST.ID') }}"
-#  failed_when: "connection_status.rc != 0"
+    hosts_list: "{{ onehost_list.stdout | from_json | json_query('HOST_POOL.HOST[*].{id: ID, hostname: NAME, state: STATE}') }}"
+  failed_when: "connection_status.rc != 0"
 
 - name: Verify hosts list
   set_fact:
-    verification_result: "{{ verification_result | combine({'Number of registered HV hosts' : hosts_list |length }) }}"
+    verification_result: "{{ verification_result | combine({'Status of the registered HV hosts' : hosts_list }) }}"
 
-# !!! Validate behavior for multiple hosts
-- name: Check monitoring status for each registered host
-  ansible.builtin.shell: >
-    onehost show "{{ item }}" -j
-  register: host_status
-  failed_when: " host_status.rc != 0 "
-  loop:  "{{ hosts_list | list }}"
-
-- name: Get host status
-  debug:
-    msg: "{{ host_status.results[0].stdout | from_json | json_query('HOST.STATE') }}"
-  
-- name: Verify hosts monitoring
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Check monitoring status for each registered host' : 'ok' }) }}"
 
 - name: Set host offline and then set online
   ansible.builtin.shell: |
-    onehost disable "{{ item }}"
+    onehost disable "{{ item.id }}"
     sleep 1
-    onehost enable "{{ item }}"
+    onehost enable "{{ item.id }}"
     sleep 1
-    onehost show "{{ item }}" -j
+    onehost show "{{ item.id }}" -j
   register: host_monitoring
-  loop: "{{ hosts_list | list }}" 
+  loop: "{{ hosts_list }}" 
 
-- name: Verify host offline and then set online
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Put host offline and then set online. Host status' : host_monitoring.results[0].stdout | from_json | json_query('HOST.STATE') }) }}"
-    
 - name: Get host status
   debug:
-    msg: "{{ host_monitoring.results[0].stdout | from_json | json_query('HOST.STATE') }}"
+    msg: "{{ host_monitoring }}"
+
+# If we reached here all hosts monitoring is ok. Individual hosts status is in hosts_list variable    
+- name: Verify host offline and then set online
+  set_fact:
+    verification_result: "{{ verification_result | combine({'Put hosts offline and then set online. Hosts status' : 'ok' }) }}"
 
 - name: Create vnet
+  when: create_test_network 
   block:
     - name: Render vnet config
       template:
@@ -262,6 +260,7 @@
 - name: Verify host offline and then set online
   set_fact:
     verification_result: "{{ verification_result | combine({'Test network creation' : 'ok'}) }}"
+  when: create_test_network 
 
 - name: Get datastores list
   ansible.builtin.shell: >
@@ -304,8 +303,8 @@
     msg: "{{ marketplace_list.stdout | from_json | json_query('MARKETPLACE_POOL.MARKETPLACE') | length }}"
 
 - name: Download test VM template and image from the Marketplace
-  ansible.builtin.shell: >
-     onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header) '{{test_vm_name}}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
+  ansible.builtin.shell: |
+     onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
   register: vm_template_id
   failed_when: "vm_template_id.rc != 0"
 
@@ -326,7 +325,7 @@
 
 - name: Verify Marketplaces
   set_fact:
-    verification_result: "{{ verification_result | combine({'Download test VM template from the marketplace' : 'ok' }) }}"
+    verification_result: "{{ verification_result | combine({'Download a test VM template from the marketplace' : 'ok' }) }}"
    
 - name: Instantiate test VM
   ansible.builtin.shell: >
@@ -360,6 +359,7 @@
   until: vm_ping_result.rc == 0
   retries: 10
   delay: 10
+  when: test_vm_check_connection
 
 - name: Record connection status to test VM
   set_fact:
@@ -372,79 +372,89 @@
   register: cleanup_result
   failed_when: "cleanup_result.rc != 0"
 
-# Storage banchmarking
+# Storage banchmarking commands on the reference VM
 # apk update
 # apk add fio
 # fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randwrite --direct=1 --group_reporting  --output-format=json | jq '.jobs[0].write'
 #  fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randread --direct=1 --group_reporting  --output-format=json | jq '.jobs[0].read'
 
 ###
-# Storage benchmarking
+# Storage benchmarking. Execute the block below only when {{ execute_storage_benchmarking }} variable set
 ###
+- name: Run Storage benchmark test
+  block:
+  - name: Instantiate benchmark VM
+    ansible.builtin.shell: >
+      onetemplate instantiate {{ vm_template_id.stdout }} --nic '{{test_vnet_name}}' --disk {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}:size=10000 --mem 2g
+    register: benchmarkvm_id
+    failed_when: "benchmarkvm_id.rc != 0"
 
-- name: Instantiate benchmark VM
-  ansible.builtin.shell: >
-    onetemplate instantiate {{ vm_template_id.stdout }} --nic '{{test_vnet_name}}' --disk {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}:size=10000 --mem 2g
-  register: benchmarkvm_id
-  failed_when: "benchmarkvm_id.rc != 0"
+  - name: Wait for benchmark VM to come up
+    ansible.builtin.shell: >
+      onevm list --f ID={{benchmarkvm_id.stdout.split(':')[1] | trim}} -l STAT --no-header
+    register: benchmarkvm_state
+    failed_when: "benchmarkvm_state.rc != 0"
+    until: benchmarkvm_state.stdout == "runn"
+    retries: 10
+    delay: 10
 
-- name: Wait for benchmark VM to come up
-  ansible.builtin.shell: >
-    onevm list --f ID={{benchmarkvm_id.stdout.split(':')[1] | trim}} -l STAT --no-header
-  register: benchmarkvm_state
-  failed_when: "benchmarkvm_state.rc != 0"
-  until: benchmarkvm_state.stdout == "runn"
-  retries: 10
-  delay: 10
+  - name: Get Benchmark VM IP
+    ansible.builtin.shell: >
+      onevm list --f ID={{benchmarkvm_id.stdout.split(':')[1] | trim}} -l IP --no-header
+    register: vm_ip
+    failed_when: "vm_state.rc != 0"
 
-- name: Get Benchmark VM IP
-  ansible.builtin.shell: >
-    onevm list --f ID={{benchmarkvm_id.stdout.split(':')[1] | trim}} -l IP --no-header
-  register: vm_ip
-  failed_when: "vm_state.rc != 0"
+  - name: Verify ssh connection to the benchmark VM
+    ansible.builtin.shell: >
+      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}}
+    register: ssh_conn_result
+    until: ssh_conn_result.rc == 0
+    retries: 10
+    delay: 10
 
-- name: Verify ssh connection to the benchmark VM
-  ansible.builtin.shell: >
-    ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}}
-  register: ssh_conn_result
-  until: ssh_conn_result.rc == 0
-  retries: 10
-  delay: 10
+  - name: Run Storage benchmark for write
+    ansible.builtin.shell: |
+      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} apk update > /dev/null
+      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} apk add fio > /dev/null
+      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} "fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randwrite --direct=1 --group_reporting  --output-format=json | jq  -rc '.jobs[0] | {\"iodepth\": .\"job options\".iodepth, bs: .\"job options\".bs, \"clat_ms\": (.write.clat_ns.mean/1000)|floor, \"bw_mbs\": (.write.bw_mean/1024)|floor, iops: .write.iops_mean|floor}'"
+    register: write_benchmark
+    failed_when: "write_benchmark.rc != 0"
 
-- name: Run Storage benchmark for write
-  ansible.builtin.shell: |
-    ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} apk update > /dev/null
-    ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} apk add fio > /dev/null
-    ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} "fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randwrite --direct=1 --group_reporting  --output-format=json | jq  -rc '.jobs[0] | {\"iodepth\": .\"job options\".iodepth, bs: .\"job options\".bs, \"clat_ms\": (.write.clat_ns.mean/1000)|floor, \"bw_mbs\": (.write.bw_mean/1024)|floor, iops: .write.iops_mean|floor}'"
-  register: write_benchmark
-  failed_when: "write_benchmark.rc != 0"
-
-- name: Save write benchmark Results
-  set_fact:
-    write:
-      bs: "{{ write_benchmark.stdout | from_json | json_query('bs') }}"
-      bw_mbs: "{{ write_benchmark.stdout | from_json | json_query('bw_mbs') }}"
-      clat_ms: "{{ write_benchmark.stdout | from_json | json_query('clat_ms') }}"
-      iodepth: "{{ write_benchmark.stdout | from_json | json_query('iodepth') }}"
-      iops: "{{ write_benchmark.stdout | from_json | json_query('iops') }}"
-
-
-- name: Run Storage benchmark for read
-  ansible.builtin.shell: >
-    ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} "fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randread --direct=1 --group_reporting  --output-format=json | jq -rc '.jobs[0] | {\"iodepth\": .\"job options\".iodepth, bs: .\"job options\".bs, \"clat_ms\": (.read.clat_ns.mean/1000)|floor, \"bw_mbs\": (.read.bw_mean/1024)|floor, iops: .read.iops_mean|floor}'"
-  register: read_benchmark
-  failed_when: "read_benchmark.rc != 0"   
-
-- name: Save read benchmark Results
-  set_fact:
-    read:
-      bs: "{{ read_benchmark.stdout | from_json | json_query('bs') }}"
-      bw_mbs: "{{ read_benchmark.stdout | from_json | json_query('bw_mbs') }}"
-      clat_ms: "{{ read_benchmark.stdout | from_json | json_query('clat_ms') }}"
-      iodepth: "{{ read_benchmark.stdout | from_json | json_query('iodepth') }}"
-      iops: "{{ read_benchmark.stdout | from_json | json_query('iops') }}"
+  - name: Save write benchmark Results
+    set_fact:
+      write:
+        bs: "{{ write_benchmark.stdout | from_json | json_query('bs') }}"
+        bw_mbs: "{{ write_benchmark.stdout | from_json | json_query('bw_mbs') }}"
+        clat_ms: "{{ write_benchmark.stdout | from_json | json_query('clat_ms') }}"
+        iodepth: "{{ write_benchmark.stdout | from_json | json_query('iodepth') }}"
+        iops: "{{ write_benchmark.stdout | from_json | json_query('iops') }}"
 
 
+  - name: Run Storage benchmark for read
+    ansible.builtin.shell: >
+      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} "fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randread --direct=1 --group_reporting  --output-format=json | jq -rc '.jobs[0] | {\"iodepth\": .\"job options\".iodepth, bs: .\"job options\".bs, \"clat_ms\": (.read.clat_ns.mean/1000)|floor, \"bw_mbs\": (.read.bw_mean/1024)|floor, iops: .read.iops_mean|floor}'"
+    register: read_benchmark
+    failed_when: "read_benchmark.rc != 0"   
+
+  - name: Save read benchmark Results
+    set_fact:
+      read:
+        bs: "{{ read_benchmark.stdout | from_json | json_query('bs') }}"
+        bw_mbs: "{{ read_benchmark.stdout | from_json | json_query('bw_mbs') }}"
+        clat_ms: "{{ read_benchmark.stdout | from_json | json_query('clat_ms') }}"
+        iodepth: "{{ read_benchmark.stdout | from_json | json_query('iodepth') }}"
+        iops: "{{ read_benchmark.stdout | from_json | json_query('iops') }}"
+
+  - name: Delete benchmark VM
+    ansible.builtin.shell: |
+      onevm terminate --hard {{benchmarkvm_id.stdout.split(':')[1]}}
+    register: cleanup_result
+    failed_when: "cleanup_result.rc != 0"
+
+  when: execute_storage_benchmarking
+
+
+# Prepare report 
 - name: Render report
   delegate_to: localhost
   vars:
@@ -456,12 +466,16 @@
 
 - name: Cleanup test resources
   ansible.builtin.shell: |
-    onevm terminate --hard {{benchmarkvm_id.stdout.split(':')[1]}}
-    sleep 10
-    onevnet delete "{{ test_vnet_name }}"
     onetemplate delete -R {{ vm_template_id.stdout }}
   register: cleanup_result
   failed_when: "cleanup_result.rc != 0"
 
-
+# Delete test network only when it was created by us
+#
+- name: Cleanup created test network
+  ansible.builtin.shell: |
+    onevnet delete "{{ test_vnet_name }}"
+  register: cleanup_result
+  failed_when: "cleanup_result.rc != 0"
+  when: create_test_network
 

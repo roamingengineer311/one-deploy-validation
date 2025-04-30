@@ -14,8 +14,7 @@
   args:
     executable: /bin/bash
   register: ping_exec
-  # with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') | difference([hostvars[inventory_hostname]['ansible_host']]) }}"    
-  with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') }}"
+  with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') | difference([hostvars[inventory_hostname]['ansible_host']]) }}"    
   loop_control:
     label: "{{ item }}"
   changed_when: ping_exec.rc == 0
@@ -50,8 +49,7 @@
   args:
     executable: /bin/bash
   register: iperf_results
-  # with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') | difference([hostvars[inventory_hostname]['ansible_host']]) }}"
-  with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') }}"
+  with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') | difference([hostvars[inventory_hostname]['ansible_host']]) }}"
   loop_control:
     label: "{{ item }}"
   throttle: 1 # Force sequential (one host at a time)
