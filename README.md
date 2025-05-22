@@ -1,9 +1,6 @@
 [//]: # ( vim: set wrap : )
 
-# engineering-deploy
-
-> [!WARNING]
-> This repository is for internal use only, it is NOT supposed to be public.
+# one-deploy-validation
 
 ## Checkout
 
