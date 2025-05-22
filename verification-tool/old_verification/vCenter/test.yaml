@@ -1,0 +1,6 @@
+---
+
+'vcenter-10-VM_Operations_spec.rb'
+'vcenter-12-Disk_Resize_spec.rb'
+'vcenter-20-DS_Operations_spec.rb'
+'vcenter-30-vcenter_standard_net_spec.rb'
