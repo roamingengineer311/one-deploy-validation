@@ -1,0 +1,68 @@
+---
+
+- name: Install ping dependencies
+  ansible.builtin.package:
+    name: 
+      - jc
+      - jq
+      - iperf3
+    state: present
+
+- name: Run ping tests
+  ansible.builtin.shell: >
+    ping -c 10 {{ item }} | jc --ping | jq .round_trip_ms_avg
+  args:
+    executable: /bin/bash
+  register: ping_exec
+  with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') | difference([hostvars[inventory_hostname]['ansible_host']]) }}"    
+  loop_control:
+    label: "{{ item }}"
+  changed_when: ping_exec.rc == 0
+
+- name: Show ping results
+  ansible.builtin.debug:
+    msg: "Ping from: {{ inventory_hostname }} to: {{ item.item }} Result: {{ item.stdout }} ms"
+  loop: "{{ ping_exec.results }}"
+
+- name: Check if iperf3 server is running
+  ansible.builtin.command: pgrep -f "iperf3 -s -p {{ iperf.port }}"
+  register: iperf3_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Start iperf3 server in all hosts
+  ansible.builtin.command: nohup iperf3 -s -p {{ iperf.port }} > /dev/null 2>&1 &
+  async: 30
+  poll: 0
+  when: iperf3_check.rc != 0
+  changed_when: true
+
+- name: Verify iperf3 is running
+  ansible.builtin.wait_for:
+    port: "{{ iperf.port }}"
+    timeout: 30
+
+- name: Run iperf3 tests
+  ansible.builtin.shell: |
+    set -o pipefail
+    iperf3 -c {{ item }} -p {{ iperf.port }} -t {{ iperf.test_time }} -J | jq .end.sum_sent.bits_per_second
+  args:
+    executable: /bin/bash
+  register: iperf_results
+  with_items: "{{ groups['node'] | map('extract', hostvars, 'ansible_host') | difference([hostvars[inventory_hostname]['ansible_host']]) }}"
+  loop_control:
+    label: "{{ item }}"
+  throttle: 1 # Force sequential (one host at a time)
+  changed_when: false
+
+- name: Kill the iperf3 server process
+  ansible.builtin.command: pkill iperf3
+  ignore_errors: true
+  register: iperf_killing
+  changed_when: iperf_killing.rc == 0
+
+- name: Show iperf3 results
+  ansible.builtin.debug: 
+    msg: "Iperf_client: {{ inventory_hostname }} Iperf_server: {{ item.item }} Result: {{ (item.stdout | int) / 1000000 }} Mbps"
+  loop: "{{ iperf_results.results }}"
+
