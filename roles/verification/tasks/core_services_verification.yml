@@ -67,21 +67,27 @@
 # Modify for Debian and RH-based distros        
 - name: Verify OpenNebula private repos on the Debian-based OS
   ansible.builtin.shell: >
-    cd  /etc/apt/sources.list.d/ && grep -Rn opennebula . | awk '{print $2}'
-  register: repos_list
-  failed_when: "repos_list.rc != 0"
+    cd /etc/apt/sources.list.d/ && grep -Rn opennebula . | awk '{print $2}'
+  register: debian_repos_list
+  failed_when: "debian_repos_list.rc != 0"
   when: ansible_os_family == "Debian"
 
 - name: Verify OpenNebula private repos on the RH-based OS
   ansible.builtin.shell: >
-    cd  /etc/yum.repos.d/ && grep -Rn opennebula . | grep baseurl | awk -F '@' '/1/ {print $2}'
-  register: repos_list
-  failed_when: "repos_list.rc != 0"
+    cd /etc/yum.repos.d/ && grep -Rn opennebula . | grep baseurl | awk -F '@' '/1/ {print $2}'
+  register: rh_repos_list
+  failed_when: "rh_repos_list.rc != 0"
   when: ansible_os_family == "RedHat"
 
-- name: Save OpenNebula repositories
+- name: Save OpenNebula Debian repositories
   set_fact:
-    verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': repos_list.stdout}) }}"
+    verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': debian_repos_list.stdout}) }}"
+  when: debian_repos_list is defined and (debian_repos_list.skipped is not defined or not debian_repos_list.skipped)
+
+- name: Save OpenNebula RedHat repositories
+  set_fact:
+    verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': rh_repos_list.stdout}) }}"
+  when: rh_repos_list is defined and (rh_repos_list.skipped is not defined or not rh_repos_list.skipped)
 
 - name: Verify OpenNebula scheduler can contact oned
   ansible.builtin.shell: |
