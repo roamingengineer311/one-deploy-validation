@@ -310,16 +310,45 @@
 
 - name: Download test VM template and image from the Marketplace
   ansible.builtin.shell: |
-     onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
-  register: vm_template_id
-  failed_when: "vm_template_id.rc != 0"
+    onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}'
+  register: vm_download
+  # success when: rc == 0 or rc == 255 and 'NAME is already taken by IMAGE' in stderr
+  failed_when: "vm_download.rc != 0 and (vm_download.rc != 255 or 'NAME is already taken by IMAGE' not in vm_download.stderr)"
 
 # We have to check that image was downlodaded before attempting to instantiate VM
-- name: Get image ID
-  ansible.builtin.shell: >
-    onetemplate show {{ vm_template_id.stdout }} -j
-  register: image_output
-  failed_when: "image_output.rc != 0"
+- block:
+    - name: Get VM template ID
+      ansible.builtin.shell: >
+        echo '{{ vm_download.stdout }}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
+      register: vm_template_id
+      failed_when: "vm_template_id.rc != 0"
+
+    - name: Get newly downloaded VM template as JSON
+      ansible.builtin.shell: >
+        onetemplate show {{ vm_template_id.stdout }} -j
+      register: image_output
+      failed_when: "image_output.rc != 0 and image_output.stdout != ''"
+
+    - set_fact:
+        image_output: "{{ image_output }}"
+  when: vm_download.rc == 0
+
+- block:
+    - name: Get VM template ID
+      ansible.builtin.shell: >
+        onetemplate list --csv -f NAME='{{ test_vm_name }}' -l ID --no-header
+      register: vm_template_id
+      failed_when: "vm_template_id.rc != 0"
+
+    - name: Get existing VM template as JSON
+      ansible.builtin.shell: >
+        onetemplate show {{ vm_template_id.stdout }} -j
+      register: image_output
+      failed_when: "image_output.rc != 0 and image_output.stdout != ''"
+
+    - set_fact:
+        image_output: "{{ image_output }}"
+  when: vm_download.rc == 255 and 'NAME is already taken by IMAGE' in vm_download.stderr
 
 - name: Verify that VM image is in ready state
   ansible.builtin.shell: >
@@ -394,6 +423,9 @@
       onetemplate instantiate {{ vm_template_id.stdout }} --nic '{{test_vnet_name}}' --disk {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}:size=10000 --mem 2g
     register: benchmarkvm_id
     failed_when: "benchmarkvm_id.rc != 0"
+    # retry for robustness, e.g. in case we can only have 1 test VM running at a time for some reason, previous one is still shutting down.
+    retries: 3
+    delay: 20
 
   - name: Wait for benchmark VM to come up
     ansible.builtin.shell: >
