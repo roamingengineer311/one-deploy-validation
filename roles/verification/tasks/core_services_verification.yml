@@ -67,21 +67,27 @@
 # Modify for Debian and RH-based distros        
 - name: Verify OpenNebula private repos on the Debian-based OS
   ansible.builtin.shell: >
-    cd  /etc/apt/sources.list.d/ && grep -Rn opennebula . | awk '{print $2}'
-  register: repos_list
-  failed_when: "repos_list.rc != 0"
+    cd /etc/apt/sources.list.d/ && grep -Rn opennebula . | awk '{print $2}'
+  register: debian_repos_list
+  failed_when: "debian_repos_list.rc != 0"
   when: ansible_os_family == "Debian"
 
 - name: Verify OpenNebula private repos on the RH-based OS
   ansible.builtin.shell: >
-    cd  /etc/yum.repos.d/ && grep -Rn opennebula . | grep baseurl | awk -F '@' '/1/ {print $2}'
-  register: repos_list
-  failed_when: "repos_list.rc != 0"
+    cd /etc/yum.repos.d/ && grep -Rn opennebula . | grep baseurl | awk -F '@' '/1/ {print $2}'
+  register: rh_repos_list
+  failed_when: "rh_repos_list.rc != 0"
   when: ansible_os_family == "RedHat"
 
-- name: Save OpenNebula repositories
+- name: Save OpenNebula Debian repositories
   set_fact:
-    verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': repos_list.stdout}) }}"
+    verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': debian_repos_list.stdout}) }}"
+  when: debian_repos_list is defined and (debian_repos_list.skipped is not defined or not debian_repos_list.skipped)
+
+- name: Save OpenNebula RedHat repositories
+  set_fact:
+    verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': rh_repos_list.stdout}) }}"
+  when: rh_repos_list is defined and (rh_repos_list.skipped is not defined or not rh_repos_list.skipped)
 
 - name: Verify OpenNebula scheduler can contact oned
   ansible.builtin.shell: |
@@ -304,16 +310,36 @@
 
 - name: Download test VM template and image from the Marketplace
   ansible.builtin.shell: |
-     onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
-  register: vm_template_id
-  failed_when: "vm_template_id.rc != 0"
+    onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}'
+  register: vm_download
+  # success when: rc == 0 or rc == 255 and 'NAME is already taken by IMAGE' in stderr
+  failed_when: "vm_download.rc != 0 and (vm_download.rc != 255 or 'NAME is already taken by IMAGE' not in vm_download.stderr)"
 
 # We have to check that image was downlodaded before attempting to instantiate VM
-- name: Get image ID
+- name: Get newly downloaded VM template ID
+  ansible.builtin.shell: >
+    echo '{{ vm_download.stdout }}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
+  register: new_vm_template_id
+  failed_when: "new_vm_template_id.rc != 0"
+  when: vm_download.rc == 0
+
+- name: Get existing VM template ID
+  ansible.builtin.shell: >
+    onetemplate list --csv -f NAME='{{ test_vm_name }}' -l ID --no-header
+  register: existing_vm_template_id
+  failed_when: "existing_vm_template_id.rc != 0"
+  when: vm_download.rc == 255 and 'NAME is already taken by IMAGE' in vm_download.stderr
+    
+- name: Set VM template ID
+  set_fact:
+    vm_template_id: "{{ new_vm_template_id if not new_vm_template_id.skipped|default(false) else existing_vm_template_id }}"
+  failed_when: new_vm_template_id.skipped|default(false) and existing_vm_template_id.skipped|default(false)
+
+- name: Get VM template as JSON
   ansible.builtin.shell: >
     onetemplate show {{ vm_template_id.stdout }} -j
   register: image_output
-  failed_when: "image_output.rc != 0"
+  failed_when: "image_output.rc != 0 and image_output.stdout != ''"
 
 - name: Verify that VM image is in ready state
   ansible.builtin.shell: >
@@ -388,6 +414,9 @@
       onetemplate instantiate {{ vm_template_id.stdout }} --nic '{{test_vnet_name}}' --disk {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}:size=10000 --mem 2g
     register: benchmarkvm_id
     failed_when: "benchmarkvm_id.rc != 0"
+    # retry for robustness, e.g. in case we can only have 1 test VM running at a time for some reason, previous one is still shutting down.
+    retries: 3
+    delay: 20
 
   - name: Wait for benchmark VM to come up
     ansible.builtin.shell: >
@@ -453,10 +482,10 @@
 
   when: execute_storage_benchmarking
 
-
 # Prepare report 
 - name: Render report
   delegate_to: localhost
+  become: false
   vars:
     date: "{{ '%Y-%m-%d %H:%M:%S' | strftime(ansible_date_time.epoch) }}"  
   template:
@@ -464,11 +493,26 @@
     dest: /tmp/cloud_verification_report.html
   ignore_errors: True
 
-- name: Cleanup test resources
+- name: Print report location
+  ansible.builtin.debug: 
+    msg: |
+      ******************************************************
+      Verification report rendered to /tmp/cloud_verification_report.html
+      ******************************************************
+
+- name: Cleanup test template
   ansible.builtin.shell: |
     onetemplate delete -R {{ vm_template_id.stdout }}
   register: cleanup_result
   failed_when: "cleanup_result.rc != 0"
+
+- name: Cleanup test image
+  ansible.builtin.shell: |
+    oneimage delete {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}
+  register: cleanup_result
+  failed_when: "cleanup_result.rc != 0"
+  retries: 10
+  delay: 10
 
 # Delete test network only when it was created by us
 #

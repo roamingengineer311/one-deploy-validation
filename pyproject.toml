@@ -16,6 +16,7 @@ dependencies = [
   "molecule",
   "netaddr",
   "pyone",
+  "jmespath",
 ]
 
 [tool.hatch.envs.ceph]
