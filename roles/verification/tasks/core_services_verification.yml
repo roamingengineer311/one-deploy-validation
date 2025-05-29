@@ -482,7 +482,6 @@
 
   when: execute_storage_benchmarking
 
-
 # Prepare report 
 - name: Render report
   delegate_to: localhost
@@ -494,11 +493,26 @@
     dest: /tmp/cloud_verification_report.html
   ignore_errors: True
 
-- name: Cleanup test resources
+- name: Print report location
+  ansible.builtin.debug: 
+    msg: |
+      ******************************************************
+      Verification report rendered to /tmp/cloud_verification_report.html
+      ******************************************************
+
+- name: Cleanup test template
   ansible.builtin.shell: |
     onetemplate delete -R {{ vm_template_id.stdout }}
   register: cleanup_result
   failed_when: "cleanup_result.rc != 0"
+
+- name: Cleanup test image
+  ansible.builtin.shell: |
+    oneimage delete {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}
+  register: cleanup_result
+  failed_when: "cleanup_result.rc != 0"
+  retries: 10
+  delay: 10
 
 # Delete test network only when it was created by us
 #
