@@ -89,18 +89,19 @@
     verification_result: "{{ verification_result | combine({'Configured OpenNebula repository': rh_repos_list.stdout}) }}"
   when: rh_repos_list is defined and (rh_repos_list.skipped is not defined or not rh_repos_list.skipped)
 
-- name: Verify OpenNebula scheduler can contact oned
-  ansible.builtin.shell: |
-    systemctl stop opennebula-scheduler && systemctl start opennebula-scheduler
-    sleep 3
-    grep 'oned successfully contacted' /var/log/one/sched.log
-  register: one_scheduler
-  failed_when: "one_scheduler.rc != 0"
+- block:
+  - name: Verify OpenNebula scheduler can contact oned
+    ansible.builtin.shell: |
+      systemctl stop opennebula-scheduler && systemctl start opennebula-scheduler
+      sleep 3
+      grep 'oned successfully contacted' /var/log/one/sched.log
+    register: one_scheduler
+    failed_when: "one_scheduler.rc != 0"
 
-- name: Save OpenNebula scheduler can contact oned
-  set_fact:
-    verification_result: "{{ verification_result | combine({'OpenNebula scheduler can contact oned': 'ok'}) }}"
-
+  - name: Save OpenNebula scheduler can contact oned
+    set_fact:
+      verification_result: "{{ verification_result | combine({'OpenNebula scheduler can contact oned': 'ok'}) }}"
+  when: one_version is version('6.99', '<')
 
 - name: OpenNebula Gate service starts and shutdown
   ansible.builtin.shell: |
@@ -110,7 +111,7 @@
   register: onegate_status
   failed_when: "'running' not in onegate_status.stdout"
 
-- name: Save OpenNebula scheduler can contact oned
+- name: Save OpenNebula Gate can restart
   set_fact:
     verification_result: "{{ verification_result | combine({'OpenNebula Gate service restart' : 'ok'}) }}"
 
@@ -120,7 +121,7 @@
   register: onegate_enabled
   failed_when: "'enabled' not in onegate_enabled.stdout"
 
-- name: Save OpenNebula scheduler can contact oned
+- name: Save OpenNebula Gate configured to start at boot
   set_fact:
     verification_result: "{{ verification_result | combine({'OpenNebula Gate is configured to start at boot' : 'ok'}) }}"
 
