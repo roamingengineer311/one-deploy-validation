@@ -7,7 +7,7 @@
 1. Resursively clone the `engineering-deploy` repository
 
    ```shell
-   cd ~/ && git clone --recursive git@github.com:OpenNebula/engineering-deploy.git
+   cd ~/ && git clone --recursive git@github.com:OpenNebula/one-deploy-validation.git
    ```
 
 ## Requirements
