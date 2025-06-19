@@ -1,0 +1,28 @@
+---
+- name: Set host_id for this iteration
+  ansible.builtin.set_fact:
+    host_id: "{{ item }}"
+
+- name: Render vm group template
+  template:
+    src: vm.tmpl.j2
+    dest: /tmp/vm-on-host-{{ host_id }}.tmpl
+  
+- name: Read file content into a variable
+  ansible.builtin.slurp:
+    src: /tmp/vm-on-host-{{ host_id }}.tmpl
+  register: extra_template_content_raw
+
+- name: Instantiate test VM
+  ansible.builtin.command: onetemplate instantiate 7 --nic vxlan --raw '{{ extra_template_content_raw.content | b64decode }}'
+  register: vm_id
+  failed_when: "vm_id.rc != 0" 
+
+- name: Wait for VM come up
+  ansible.builtin.shell: >
+    onevm list --f ID={{vm_id.stdout.split(':')[1] | trim}} -l STAT --no-header
+  register: vm_state
+  failed_when: "vm_state.rc != 0"
+  until: vm_state.stdout == "runn"
+  retries: 10
+  delay: 10
