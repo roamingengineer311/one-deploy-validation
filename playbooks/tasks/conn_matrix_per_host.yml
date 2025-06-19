@@ -1,0 +1,15 @@
+---
+- name: Set host_id for this iteration
+  ansible.builtin.set_fact:
+    host_id: "{{ item }}"
+
+- name: Render vm group template
+  template:
+    src: vm-group.tmpl.j2
+    dest: /tmp/vm-group-{{ host_id }}.tmpl
+
+- name: Create OpenNebula VM Group from template file
+  ansible.builtin.command: onevmgroup create "/tmp/vm-group-{{ host_id }}.tmpl"
+  register: vmgroup_create
+  changed_when: "'ID' in vmgroup_create.stdout"
+  failed_when: vmgroup_create.rc != 0

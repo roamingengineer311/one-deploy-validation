@@ -1,0 +1,29 @@
+---
+- hosts: "{{ frontend_group | d('frontend') }}"
+  tasks:
+    # TODO: only on 1 frontend node if there is federation / HA
+    - name: Get list of OpenNebula host IDs
+      shell: onehost list -l ID --csv --no-header
+      register: host_ids
+      become: true
+      become_user: oneadmin
+      changed_when: false
+
+    - name: Display all host IDs
+      debug:
+        msg: "Found OpenNebula hosts with IDs: {{ host_ids.stdout_lines }}"
+
+    - name: Create a dedicated VM group for each host
+      ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
+      loop: "{{ host_ids.stdout_lines }}"
+
+    - name: Cleanup all created VM groups
+      ansible.builtin.include_tasks: tasks/cleanup_conn_matrix_per_host.yml
+      loop: "{{ host_ids.stdout_lines }}"
+
+- hosts: "{{ node_group | d('node') }}"
+  roles:
+    - role: connectivity-matrix
+      vars:
+        conn_matrix_setup: false
+

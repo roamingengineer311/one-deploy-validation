@@ -1,0 +1,6 @@
+NAME = "only-host-{{ host_id }}"
+ROLE = [
+    NAME = "only-one-host",
+    HOST_AFFINED = "{{ host_id }}",
+    POLICY = "ANTI_AFFINED"
+]

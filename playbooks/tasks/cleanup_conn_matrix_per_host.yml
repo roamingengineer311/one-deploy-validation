@@ -1,0 +1,9 @@
+---
+- name: Set host_id for this iteration
+  ansible.builtin.set_fact:
+    host_id: "{{ item }}"
+
+- name: Delete VM Group 
+  ansible.builtin.command: onevmgroup delete only-host-{{ host_id }}
+  register: vmgroup_delete
+  failed_when: vmgroup_delete.rc != 0

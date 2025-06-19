@@ -10,3 +10,4 @@
   roles:
     - role: verification
 
+- ansible.builtin.import_playbook: ./conn-matrix.yml
