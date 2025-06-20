@@ -3,5 +3,6 @@ VMGROUP=[
     VMGROUP_NAME="only-host-{{ host_id }}",
     ROLE = "only-one-host"]
 CONTEXT=[
-    SSH_PUBLIC_KEY="{{ ssh_public_key }}"
+    SSH_PUBLIC_KEY="{{ ssh_public_key }}",
+    NETWORK="YES"
 ]
