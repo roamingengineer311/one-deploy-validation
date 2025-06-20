@@ -1,26 +1,4 @@
 ---
-- hosts: "{{ frontend_group | d('frontend') }}"
-  tasks:
-    # TODO: only on 1 frontend node if there is federation / HA
-    - name: Get list of OpenNebula host IDs
-      shell: onehost list -l ID --csv --no-header
-      register: host_ids
-      become: true
-      become_user: oneadmin
-      changed_when: false
-
-    - name: Display all host IDs
-      debug:
-        msg: "Found OpenNebula hosts with IDs: {{ host_ids.stdout_lines }}"
-
-    - name: Create a dedicated VM group for each host
-      ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
-      loop: "{{ host_ids.stdout_lines }}"
-
-#     - name: Cleanup all created VM groups
-#       ansible.builtin.include_tasks: tasks/cleanup_conn_matrix_per_host.yml
-#       loop: "{{ host_ids.stdout_lines }}"
-
 - hosts: "{{ node_group | d('node') }}"
   gather_facts: true
   tasks:
@@ -60,16 +38,25 @@
               )
             }}
 
-    # - name: ssh-keys
-    #   debug:
-    #     msg: |
-    #       Public keys for conn-matrix:
-    #       {% for host, key in conn_matrix_pubkeys.items() %}
-    #       {{ host }}: {{ key }}
-    #       {% endfor %}
 
 - hosts: "{{ frontend_group | d('frontend') }}"
   tasks:
-    - name: Deploy a VM on each host 
-      ansible.builtin.include_tasks: tasks/conn_matrix_create_vms.yml
-      loop: "{{ host_ids.stdout_lines }}"
+    # TODO: only on 1 frontend node if there is federation / HA
+    - name: Get list of OpenNebula host IDs and names
+      shell: onehost list -l ID,NAME --csv --no-header
+      register: host_ids_and_names
+      changed_when: false
+
+    - name: Display host ID mapping to hostnames
+      debug:
+        msg: "Found OpenNebula hosts with IDs: {{ host_ids_and_names.stdout_lines }}"
+
+    - name: Create a dedicated VM group and VM for each host
+      ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
+      loop: "{{ host_ids_and_names.stdout_lines }}"
+
+# TODO: perform the conn-matrix tests on the created VMs
+
+    - name: Cleanup all created VM groups and VMs
+      ansible.builtin.include_tasks: tasks/cleanup_conn_matrix_per_host.yml
+      loop: "{{ host_ids_and_names.stdout_lines }}"
