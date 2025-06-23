@@ -25,8 +25,10 @@
     src: /tmp/vm-on-host-{{ host_id }}.tmpl
   register: extra_template_content_raw
 
+# TODO: handle gracefully when the VMs already exist
+# TODO: parametrize the template and NIC name
 - name: Instantiate test VM
-  ansible.builtin.command: onetemplate instantiate 7 --nic vxlan --name conn-mtx-vm-on-host-{{ host_id }} --raw '{{ extra_template_content_raw.content | b64decode }}'
+  ansible.builtin.command: onetemplate instantiate 8 --nic vxlan --name conn-mtx-vm-on-host-{{ host_id }} --raw '{{ extra_template_content_raw.content | b64decode }}'
   register: vm_id
   failed_when: "vm_id.rc != 0" 
 

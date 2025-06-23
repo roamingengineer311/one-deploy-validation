@@ -41,22 +41,106 @@
 
 - hosts: "{{ frontend_group | d('frontend') }}"
   tasks:
-    # TODO: only on 1 frontend node if there is federation / HA
-    - name: Get list of OpenNebula host IDs and names
-      shell: onehost list -l ID,NAME --csv --no-header
-      register: host_ids_and_names
-      changed_when: false
+      # Only execute these steps on a single frontend host
+      - when: hostvars[groups[frontend_group | d('frontend')][0]]['ansible_host'] == ansible_host
+        block:
+        - name: Get list of OpenNebula host IDs and names
+          shell: onehost list -l ID,NAME --csv --no-header
+          register: host_ids_and_names
+          changed_when: false
 
-    - name: Display host ID mapping to hostnames
-      debug:
-        msg: "Found OpenNebula hosts with IDs: {{ host_ids_and_names.stdout_lines }}"
+        - name: Display host ID mapping to hostnames
+          debug:
+            msg: "Found OpenNebula hosts with IDs: {{ host_ids_and_names.stdout_lines }}"
 
-    - name: Create a dedicated VM group and VM for each host
-      ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
-      loop: "{{ host_ids_and_names.stdout_lines }}"
+        # - name: Create a dedicated VM group and VM for each host
+        #   ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
+        #   loop: "{{ host_ids_and_names.stdout_lines }}"
 
-# TODO: perform the conn-matrix tests on the created VMs
+        - name: Get VM host_name to VM IP mapping
+          shell: onevm list -l HOST,IP --csv --no-header
+          register: vm_host_ip_lines
+          changed_when: false
 
-    - name: Cleanup all created VM groups and VMs
-      ansible.builtin.include_tasks: tasks/cleanup_conn_matrix_per_host.yml
-      loop: "{{ host_ids_and_names.stdout_lines }}"
+        - name: Extract host_name to VM IP mapping
+          set_fact:
+            host_name_to_vm_ip: >-
+              {{ dict(
+                vm_host_ip_lines.stdout_lines | 
+                map('split', ',') | list
+              ) }}
+
+- hosts: "{{ node_group | d('node') }}"
+  gather_facts: false
+  tasks:
+    - name: Install ping dependencies
+      ansible.builtin.package:
+        name:
+          - jc
+          - jq
+        state: present
+
+    - name: Fetch host_name_to_vm_ip mapping from the first frontend node
+      set_fact:
+        host_name_to_vm_ip: "{{ hostvars[groups[frontend_group | d('frontend')][0]]['host_name_to_vm_ip'] }}"
+      when: hostvars[groups[frontend_group | d('frontend')][0]]['host_name_to_vm_ip'] is defined
+
+    - name: Add VM IP+offset/32 to br1 and route for each VM IP
+      vars:
+        _mapping_length: "{{ host_name_to_vm_ip | length }}"
+      register: add_vm_ip_route
+      failed_when: "('Address already assigned' not in add_vm_ip_route.stderr or add_vm_ip_route.rc != 2) \
+                    and add_vm_ip_route.rc != 0\
+                    and ('File exists' not in add_vm_ip_route.stderr or add_vm_ip_route.rc != 2)"
+      changed_when: add_vm_ip_route.rc == 0
+      ansible.builtin.shell: |
+        ip addr add {{ host_name_to_vm_ip[ansible_host] | ansible.utils.ipmath(_mapping_length) }}/32 dev br1
+        ip route add {{ host_name_to_vm_ip[ansible_host] }}/32 dev br1
+
+    - name: Ensure results directory exists for this host
+      file:
+        path: "/tmp/conn-matrix-results/{{ inventory_hostname }}"
+        state: directory
+        mode: '0755'
+
+    - name: Test connectivity from this host to all other VMs
+      vars:
+        _my_vm_ip: "{{ host_name_to_vm_ip[ansible_host] }}"
+        _other_hostname: "{{ groups[node_group | d('node')] | map('extract', hostvars) | selectattr('ansible_host', 'equalto', other_vm.key) | map(attribute='inventory_hostname') | list | first}}"
+      loop: "{{ host_name_to_vm_ip | dict2items }}"
+      loop_control:
+        loop_var: other_vm
+      when: other_vm.value != _my_vm_ip
+      ansible.builtin.shell: |
+        ssh -i ~/.ssh/conn-matrix -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{{ _my_vm_ip }} -- \
+          ping -c 5 {{ other_vm.value }} | jc --ping > /tmp/conn-matrix-results/{{ inventory_hostname }}/{{ _other_hostname }}.json
+      register: conn_test_result
+      retries: 3
+      delay: 5
+      until: "'Connection refused' not in conn_test_result.stderr"
+
+    - name: Read the results of the connection matrix test
+      vars:
+        _my_vm_ip: "{{ host_name_to_vm_ip[ansible_host] }}"
+        _other_hostname: "{{ groups[node_group | d('node')] | map('extract', hostvars) | selectattr('ansible_host', 'equalto', other_vm.key) | map(attribute='inventory_hostname') | list | first}}"
+      ansible.builtin.slurp:
+        src: "/tmp/conn-matrix-results/{{ inventory_hostname }}/{{ _other_hostname }}.json"
+      loop: "{{ host_name_to_vm_ip | dict2items }}"
+      loop_control:
+        loop_var: other_vm
+      when: other_vm.value != _my_vm_ip
+      register: slurped_files
+
+    - name: Build a dictionary of file contents
+      set_fact:
+        conn_results_vector: >- 
+          {{ dict(
+              slurped_files.results | selectattr('source', 'defined') | map(attribute='source') | 
+              zip(slurped_files.results | selectattr('source', 'defined') | map(attribute='content') | map('b64decode') | map('from_json'))
+            )
+          }}
+
+
+## TODO: remove SSH keys!!
+# TODO remove the ip address and route added to br1
+# remote the tmp directories from the remote hosts
