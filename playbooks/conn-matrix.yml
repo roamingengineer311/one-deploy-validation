@@ -53,9 +53,9 @@
           debug:
             msg: "Found OpenNebula hosts with IDs: {{ host_ids_and_names.stdout_lines }}"
 
-        # - name: Create a dedicated VM group and VM for each host
-        #   ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
-        #   loop: "{{ host_ids_and_names.stdout_lines }}"
+        - name: Create a dedicated VM group and VM for each host
+          ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
+          loop: "{{ host_ids_and_names.stdout_lines }}"
 
         - name: Get VM host_name to VM IP mapping
           shell: onevm list -l HOST,IP --csv --no-header
@@ -140,7 +140,42 @@
             )
           }}
 
+- name: Render the connection matrix report
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Fetch the matrix to localhost
+      set_fact:
+        conn_results_matrix: >-
+          {{
+          dict(
+            groups[node_group | d('node')] | map('extract', hostvars, 'inventory_hostname') | 
+            zip(
+              groups[node_group | d('node')] | map('extract', hostvars, 'conn_results_vector')
+            )
+          )
+          }}
+
+    - name: Write the whole conn_results_matrix as JSON to a file
+      copy:
+        content: "{{ conn_results_matrix | to_nice_json }}"
+        dest: /tmp/conn-matrix-raw-data.json
+        mode: '0644'
+      delegate_to: localhost
+      become: false
+
+    - name: Render the connection matrix report
+      template:
+        src: connectivity-matrix.j2
+        dest: /tmp/conn-matrix-report.html
+      delegate_to: localhost
+      become: false
+
+    - name: Display the connection matrix report path
+      debug:
+        msg: "Connection matrix report generated at /tmp/conn-matrix-report.html"
 
 ## TODO: remove SSH keys!!
 # TODO remove the ip address and route added to br1
 # remote the tmp directories from the remote hosts
+
