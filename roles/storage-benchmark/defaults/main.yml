@@ -1,0 +1,3 @@
+---
+#################### TEST EXECUTION CONTROL VARIABLES ####################
+execute_storage_benchmarking: true

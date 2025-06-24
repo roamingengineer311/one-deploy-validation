@@ -1,17 +1,25 @@
 ---
 - ansible.builtin.import_playbook: ./prepare-test-vm-template.yml
 
+- hosts: "{{ frontend_group | d('frontend') }}"
+  roles:
+    - role: test_vm
+
+# Run network tests on the hypervisor hosts
+- hosts: "{{ node_group | d('node') }}"
+  roles:
+    - role: storage-benchmark
+
+- ansible.builtin.import_playbook: ./conn-matrix.yml
+
+- ansible.builtin.import_playbook: ./cleanup-test-vm-template.yml
+
 # Will launch verification framework on the frontends
 - hosts: "{{ frontend_group | d('frontend') }}"
   roles:
     - role: verification
-          
+
 # Run network tests on the hypervisor hosts
 - hosts: "{{ node_group | d('node') }}"
   roles:
-    - role: verification
-
-# TODO: skip this by defalt (but no conditional import_playbook exists...)
-- ansible.builtin.import_playbook: ./conn-matrix.yml
-
-- ansible.builtin.import_playbook: ./cleanup-test-vm-template.yml
+    - role: network-benchmark

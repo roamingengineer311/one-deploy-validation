@@ -1,0 +1,5 @@
+---
+- name: Run storage benchmark test
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/storage_benchmark.yml"
+

@@ -25,8 +25,7 @@
 
 - name: Save xml-rpc status
   set_fact:
-    verification_result:
-      'XML-RPC API status': 'ok'
+    verification_result: "{{ (verification_result | default({})) | combine({'XML-RPC API status': 'ok'}) }}"
   
 - name: Check oned service enabled
   ansible.builtin.shell: >
@@ -245,30 +244,6 @@
   set_fact:
     verification_result: "{{ verification_result | combine({'Put hosts offline and then set online. Hosts status' : 'ok' }) }}"
 
-- name: Create vnet
-  when: create_test_network 
-  block:
-    - name: Render vnet config
-      template:
-        src: test_vnet.j2
-        dest: /tmp/test_vnet
-
-    - name: Create network
-      ansible.builtin.shell: >
-        onevnet create /tmp/test_vnet
-      register: test_network
-      failed_when: "test_network.rc != 0"
-
-    - name: Delete vnet definition
-      file:
-        path: /etc/foo.conf
-        state: absent
-
-- name: Verify host offline and then set online
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Test network creation' : 'ok'}) }}"
-  when: create_test_network 
-
 - name: Get datastores list
   ansible.builtin.shell: >
     onedatastore list -j
@@ -309,148 +284,6 @@
   debug:
     msg: "{{ marketplace_list.stdout | from_json | json_query('MARKETPLACE_POOL.MARKETPLACE') | length }}"
 
-- name: Verify that VM image is in ready state
-  ansible.builtin.shell: >
-    oneimage list --f ID={{ test_vm_template_image_id }} -l STAT --no-header
-  register: image_state
-  until: image_state.stdout == "rdy" 
-  retries: 10
-  delay: 10
-
-- name: Verify Marketplaces
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Download a test VM template from the marketplace' : 'ok' }) }}"
-   
-# NOTE: test_vm_template_id variable is managed by a separate playbook
-- name: Instantiate test VM
-  ansible.builtin.shell: >
-    onetemplate instantiate {{ test_vm_template_id }} --nic '{{ test_vnet_name }}'
-  register: vm_id
-  failed_when: "vm_id.rc != 0" 
-
-- name: Wait for VM come up
-  ansible.builtin.shell: >
-    onevm list --f ID={{vm_id.stdout.split(':')[1] | trim}} -l STAT --no-header
-  register: vm_state
-  failed_when: "vm_state.rc != 0"
-  until: vm_state.stdout == "runn"
-  retries: 10
-  delay: 10
-
-- name: Verify test VM
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Test VM instantiation' : 'ok' }) }}"
-
-- name: Get VM IP
-  ansible.builtin.shell: >
-    onevm list --f ID={{vm_id.stdout.split(':')[1] | trim}} -l IP --no-header
-  register: vm_ip
-  failed_when: "vm_state.rc != 0"
-
-- name: Verify connection to the test VM
-  ansible.builtin.shell: >
-    ping -c 2 {{ vm_ip.stdout }}
-  register: vm_ping_result
-  until: vm_ping_result.rc == 0
-  retries: 10
-  delay: 10
-  when: test_vm_check_connection
-
-- name: Record connection status to test VM
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Connection to the test VM instance' : 'ok' }) }}"
-    
-
-- name: Delete test VM
-  ansible.builtin.shell: |
-    onevm terminate --hard {{vm_id.stdout.split(':')[1]}}
-  register: cleanup_result
-  failed_when: "cleanup_result.rc != 0"
-
-# Storage banchmarking commands on the reference VM
-# apk update
-# apk add fio
-# fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randwrite --direct=1 --group_reporting  --output-format=json | jq '.jobs[0].write'
-#  fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randread --direct=1 --group_reporting  --output-format=json | jq '.jobs[0].read'
-
-###
-# Storage benchmarking. Execute the block below only when {{ execute_storage_benchmarking }} variable set
-###
-- name: Run Storage benchmark test
-  block:
-  - name: Instantiate benchmark VM
-    ansible.builtin.shell: >
-      onetemplate instantiate {{ test_vm_template_id }} --nic '{{test_vnet_name}}' --disk {{ test_vm_template_image_id }}:size=10000 --mem 2g
-    register: benchmarkvm_id
-    failed_when: "benchmarkvm_id.rc != 0"
-    # retry for robustness, e.g. in case we can only have 1 test VM running at a time for some reason, previous one is still shutting down.
-    retries: 3
-    delay: 20
-
-  - name: Wait for benchmark VM to come up
-    ansible.builtin.shell: >
-      onevm list --f ID={{benchmarkvm_id.stdout.split(':')[1] | trim}} -l STAT --no-header
-    register: benchmarkvm_state
-    failed_when: "benchmarkvm_state.rc != 0"
-    until: benchmarkvm_state.stdout == "runn"
-    retries: 10
-    delay: 10
-
-  - name: Get Benchmark VM IP
-    ansible.builtin.shell: >
-      onevm list --f ID={{benchmarkvm_id.stdout.split(':')[1] | trim}} -l IP --no-header
-    register: vm_ip
-    failed_when: "vm_state.rc != 0"
-
-  - name: Verify ssh connection to the benchmark VM
-    ansible.builtin.shell: >
-      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}}
-    register: ssh_conn_result
-    until: ssh_conn_result.rc == 0
-    retries: 10
-    delay: 10
-
-  - name: Run Storage benchmark for write
-    ansible.builtin.shell: |
-      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} apk update > /dev/null
-      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} apk add fio > /dev/null
-      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} "fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randwrite --direct=1 --group_reporting  --output-format=json | jq  -rc '.jobs[0] | {\"iodepth\": .\"job options\".iodepth, bs: .\"job options\".bs, \"clat_ms\": (.write.clat_ns.mean/1000)|floor, \"bw_mbs\": (.write.bw_mean/1024)|floor, iops: .write.iops_mean|floor}'"
-    register: write_benchmark
-    failed_when: "write_benchmark.rc != 0"
-
-  - name: Save write benchmark Results
-    set_fact:
-      write:
-        bs: "{{ write_benchmark.stdout | from_json | json_query('bs') }}"
-        bw_mbs: "{{ write_benchmark.stdout | from_json | json_query('bw_mbs') }}"
-        clat_ms: "{{ write_benchmark.stdout | from_json | json_query('clat_ms') }}"
-        iodepth: "{{ write_benchmark.stdout | from_json | json_query('iodepth') }}"
-        iops: "{{ write_benchmark.stdout | from_json | json_query('iops') }}"
-
-
-  - name: Run Storage benchmark for read
-    ansible.builtin.shell: >
-      ssh -i ~oneadmin/.ssh/id_rsa -q -oStrictHostKeyChecking=no root@{{vm_ip.stdout}} "fio --name=fiotest --blocksize=4k --directory=/tmp --size=5g --ioengine=libaio --iodepth=256 --runtime=60 --rw=randread --direct=1 --group_reporting  --output-format=json | jq -rc '.jobs[0] | {\"iodepth\": .\"job options\".iodepth, bs: .\"job options\".bs, \"clat_ms\": (.read.clat_ns.mean/1000)|floor, \"bw_mbs\": (.read.bw_mean/1024)|floor, iops: .read.iops_mean|floor}'"
-    register: read_benchmark
-    failed_when: "read_benchmark.rc != 0"   
-
-  - name: Save read benchmark Results
-    set_fact:
-      read:
-        bs: "{{ read_benchmark.stdout | from_json | json_query('bs') }}"
-        bw_mbs: "{{ read_benchmark.stdout | from_json | json_query('bw_mbs') }}"
-        clat_ms: "{{ read_benchmark.stdout | from_json | json_query('clat_ms') }}"
-        iodepth: "{{ read_benchmark.stdout | from_json | json_query('iodepth') }}"
-        iops: "{{ read_benchmark.stdout | from_json | json_query('iops') }}"
-
-  - name: Delete benchmark VM
-    ansible.builtin.shell: |
-      onevm terminate --hard {{benchmarkvm_id.stdout.split(':')[1]}}
-    register: cleanup_result
-    failed_when: "cleanup_result.rc != 0"
-
-  when: execute_storage_benchmarking
-
 # Prepare report 
 - name: Render report
   delegate_to: localhost
@@ -468,13 +301,3 @@
       ******************************************************
       Verification report rendered to /tmp/cloud_verification_report.html
       ******************************************************
-
-# Delete test network only when it was created by us
-#
-- name: Cleanup created test network
-  ansible.builtin.shell: |
-    onevnet delete "{{ test_vnet_name }}"
-  register: cleanup_result
-  failed_when: "cleanup_result.rc != 0"
-  when: create_test_network
-
