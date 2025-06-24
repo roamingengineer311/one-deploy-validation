@@ -23,8 +23,13 @@
               <td style="background:yellow">Warning: {{ result_element | length }} results (expected 1)</td>
             {% else %}
                 {% set result = result_element | first %}
-              <td style="background:{{ 'lightgreen' if result.packet_loss_percent == 0.0 else 'lightcoral' }}">
-                {{ result.packet_loss_percent }}%
+                {% if result.packet_loss_percent is defined %}
+                <td style="background:{{ 'lightgreen' if result.packet_loss_percent == 0.0 else 'lightcoral' }}">
+                  {{ result.packet_loss_percent }}%
+                </td>
+                {% else %}
+                <td style="background:lightcoral">missing</td>
+                {% endif %}
               </td>
             {% endif %}
           {% endif %}

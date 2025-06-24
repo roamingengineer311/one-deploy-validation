@@ -4,35 +4,41 @@
     host_id: "{{ item.split(',')[0] }}"
     ssh_public_key: "{{ hostvars['localhost']['conn_matrix_pubkeys'][item.split(',')[1]] }}"
 
-- name: Render vm group template
+- name: "Host id: {{ host_id }} -- Render vm group template"
   template:
     src: vm-group.tmpl.j2
     dest: /tmp/vm-group-{{ host_id }}.tmpl
 
-- name: Create OpenNebula VM Group from template file
+- name: "Host id: {{ host_id }} -- Create OpenNebula VM Group from template file"
   ansible.builtin.command: onevmgroup create "/tmp/vm-group-{{ host_id }}.tmpl"
   register: vmgroup_create
   changed_when: "'ID' in vmgroup_create.stdout"
   failed_when: vmgroup_create.rc != 0 and (vmgroup_create.rc != 255 or 'NAME is already taken by VMGroup' not in vmgroup_create.stderr)
 
-- name: Render vm template
+- name: "Host id: {{ host_id }} -- Render vm template"
   template:
     src: vm.tmpl.j2
     dest: /tmp/vm-on-host-{{ host_id }}.tmpl
   
-- name: Read file content into a variable
+- name: "Host id: {{ host_id }} -- Read file content into a variable"
   ansible.builtin.slurp:
     src: /tmp/vm-on-host-{{ host_id }}.tmpl
   register: extra_template_content_raw
+  no_log: true
 
-# TODO: handle gracefully when the VMs already exist
+- name: "Host id: {{ host_id }} -- Check if VM already exists"
+  ansible.builtin.command: onevm list -l ID --csv --filter NAME=conn-mtx-vm-on-host-{{ host_id }} --no-header
+  register: existing_vm
+  changed_when: false
+
 # TODO: parametrize the template and NIC name
-- name: Instantiate test VM
+- name: "Host id: {{ host_id }} -- Instantiate test VM"
   ansible.builtin.command: onetemplate instantiate 8 --nic vxlan --name conn-mtx-vm-on-host-{{ host_id }} --raw '{{ extra_template_content_raw.content | b64decode }}'
   register: vm_id
   failed_when: "vm_id.rc != 0" 
+  when: existing_vm.stdout == ""
 
-- name: Wait for VM come up
+- name: "Host id: {{ host_id }} -- Wait for VM come up"
   ansible.builtin.shell: >
     onevm list --f ID={{vm_id.stdout.split(':')[1] | trim}} -l STAT --no-header
   register: vm_state
@@ -40,3 +46,4 @@
   until: vm_state.stdout == "runn"
   retries: 10
   delay: 10
+  when: existing_vm.stdout == ""

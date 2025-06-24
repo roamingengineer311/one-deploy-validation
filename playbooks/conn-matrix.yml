@@ -1,4 +1,8 @@
 ---
+- hosts: all
+  vars_files:
+    - vars/defaults.yml
+
 - hosts: "{{ node_group | d('node') }}"
   gather_facts: true
   tasks:
@@ -11,6 +15,7 @@
       ansible.builtin.slurp:
         src: "{{ ansible_env.HOME }}/.ssh/conn-matrix.pub"
       register: conn_matrix_pubkey_raw
+      no_log: true
 
     - name: Set fact with public key
       ansible.builtin.set_fact:
@@ -37,6 +42,7 @@
                   )
               )
             }}
+      no_log: true
 
 
 - hosts: "{{ frontend_group | d('frontend') }}"
@@ -85,6 +91,7 @@
         host_name_to_vm_ip: "{{ hostvars[groups[frontend_group | d('frontend')][0]]['host_name_to_vm_ip'] }}"
       when: hostvars[groups[frontend_group | d('frontend')][0]]['host_name_to_vm_ip'] is defined
 
+    # TODO: parametrize the bridge name
     - name: Add VM IP+offset/32 to br1 and route for each VM IP
       vars:
         _mapping_length: "{{ host_name_to_vm_ip | length }}"
@@ -117,7 +124,7 @@
       register: conn_test_result
       retries: 3
       delay: 5
-      until: "'Connection refused' not in conn_test_result.stderr"
+      until: "'Connection refused' not in conn_test_result.stderr and 'No route to host' not in conn_test_result.stderr"
 
     - name: Read the results of the connection matrix test
       vars:
@@ -130,6 +137,7 @@
         loop_var: other_vm
       when: other_vm.value != _my_vm_ip
       register: slurped_files
+      no_log: true
 
     - name: Build a dictionary of file contents
       set_fact:
@@ -155,6 +163,7 @@
             )
           )
           }}
+      no_log: true
 
     - name: Write the whole conn_results_matrix as JSON to a file
       copy:
@@ -171,11 +180,45 @@
       delegate_to: localhost
       become: false
 
-    - name: Display the connection matrix report path
-      debug:
-        msg: "Connection matrix report generated at /tmp/conn-matrix-report.html"
+- hosts: "{{ node_group | d('node') }}"
+  gather_facts: false
+  tasks:
+    - name: Remove SSH key pair for conn-matrix
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_env.HOME }}/.ssh/conn-matrix"
+        - "{{ ansible_env.HOME }}/.ssh/conn-matrix.pub"
 
-## TODO: remove SSH keys!!
-# TODO remove the ip address and route added to br1
-# remote the tmp directories from the remote hosts
+    - name: Remove the tmp directories from the remote hosts
+      ansible.builtin.file:
+        path: "/tmp/conn-matrix-results/"
+        state: absent
+
+    - name: Remove the IP address and route added to br1
+      vars:
+        _my_vm_ip: "{{ host_name_to_vm_ip[ansible_host] }}"
+        _mapping_length: "{{ host_name_to_vm_ip | length }}"
+      ansible.builtin.shell: |
+        ip addr del {{ _my_vm_ip | ansible.utils.ipmath(_mapping_length) }}/32 dev br1
+        ip route del {{ _my_vm_ip }}/32 dev br1
+      ignore_errors: true
+
+- hosts: "{{ frontend_group | d('frontend') }}"
+  tasks:
+      # Only execute these steps on a single frontend host
+      - when: hostvars[groups[frontend_group | d('frontend')][0]]['ansible_host'] == ansible_host
+        block:
+        - name: Cleanup VM Groups and VMs
+          ansible.builtin.include_tasks: tasks/cleanup_conn_matrix_per_host.yml
+          loop: "{{ host_ids_and_names.stdout_lines }}"
+
+      - name: Print the connection matrix report path and raw data on 'localhost'
+        debug:
+          msg: | 
+            ******************************************************
+            Connection matrix report generated at /tmp/conn-matrix-report.html
+            and raw data at /tmp/conn-matrix-raw-data.json"
+            ******************************************************
 
