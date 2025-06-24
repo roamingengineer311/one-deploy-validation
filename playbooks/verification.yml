@@ -4,10 +4,6 @@
 - hosts: "{{ frontend_group | d('frontend') }}"
   roles:
     - role: test_vm
-
-# Run network tests on the hypervisor hosts
-- hosts: "{{ node_group | d('node') }}"
-  roles:
     - role: storage-benchmark
 
 - ansible.builtin.import_playbook: ./conn-matrix.yml
