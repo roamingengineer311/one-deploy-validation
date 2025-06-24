@@ -1,0 +1,5 @@
+---
+# Marketplace App name for test VM instantiation
+test_vm_name: 'Alpine Linux 3.21'
+test_vm_template_extra: |
+  MEMORY="512"

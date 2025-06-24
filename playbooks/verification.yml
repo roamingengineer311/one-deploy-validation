@@ -1,4 +1,5 @@
 ---
+- ansible.builtin.import_playbook: ./prepare-test-vm-template.yml
 
 # Will launch verification framework on the frontends
 - hosts: "{{ frontend_group | d('frontend') }}"
@@ -10,4 +11,7 @@
   roles:
     - role: verification
 
+# TODO: skip this by defalt (but no conditional import_playbook exists...)
 - ansible.builtin.import_playbook: ./conn-matrix.yml
+
+- ansible.builtin.import_playbook: ./cleanup-test-vm-template.yml

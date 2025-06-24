@@ -309,53 +309,9 @@
   debug:
     msg: "{{ marketplace_list.stdout | from_json | json_query('MARKETPLACE_POOL.MARKETPLACE') | length }}"
 
-- name: Download test VM template and image from the Marketplace
-  ansible.builtin.shell: |
-    onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}'
-  register: vm_download
-  # success when: rc == 0 or rc == 255 and 'NAME is already taken by IMAGE' in stderr
-  failed_when: "vm_download.rc != 0 and (vm_download.rc != 255 or 'NAME is already taken by IMAGE' not in vm_download.stderr)"
-
-# We have to check that image was downlodaded before attempting to instantiate VM
-- name: Get newly downloaded VM template ID
-  ansible.builtin.shell: >
-    echo '{{ vm_download.stdout }}' | grep -A1 VMTEMPLATE | grep ID | awk '{print $2}'
-  register: new_vm_template_id
-  failed_when: "new_vm_template_id.rc != 0"
-  when: vm_download.rc == 0
-
-- name: Get existing VM template ID
-  ansible.builtin.shell: >
-    onetemplate list --csv -f NAME='{{ test_vm_name }}' -l ID --no-header
-  register: existing_vm_template_id
-  failed_when: "existing_vm_template_id.rc != 0"
-  when: vm_download.rc == 255 and 'NAME is already taken by IMAGE' in vm_download.stderr
-    
-- name: Set VM template ID
-  set_fact:
-    vm_template_id: "{{ new_vm_template_id if not new_vm_template_id.skipped|default(false) else existing_vm_template_id }}"
-  failed_when: new_vm_template_id.skipped|default(false) and existing_vm_template_id.skipped|default(false)
-
-- name: Write extra template variables to a temporary file on the remote host
-  ansible.builtin.copy:
-    content: "{{ test_vm_template_extra }}"
-    dest: "/tmp/test_vm_template_extra.txt"
-
-- name: Update VM template with extra data
-  ansible.builtin.shell: >
-    onetemplate update --append {{ vm_template_id.stdout }} /tmp/test_vm_template_extra.txt
-  register: update_vm_template_extra
-  failed_when: update_vm_template_extra.rc != 0
-
-- name: Get VM template as JSON
-  ansible.builtin.shell: >
-    onetemplate show {{ vm_template_id.stdout }} -j
-  register: image_output
-  failed_when: "image_output.rc != 0 and image_output.stdout != ''"
-
 - name: Verify that VM image is in ready state
   ansible.builtin.shell: >
-    oneimage list --f ID={{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}} -l STAT --no-header
+    oneimage list --f ID={{ test_vm_template_image_id }} -l STAT --no-header
   register: image_state
   until: image_state.stdout == "rdy" 
   retries: 10
@@ -365,9 +321,10 @@
   set_fact:
     verification_result: "{{ verification_result | combine({'Download a test VM template from the marketplace' : 'ok' }) }}"
    
+# NOTE: test_vm_template_id variable is managed by a separate playbook
 - name: Instantiate test VM
   ansible.builtin.shell: >
-    onetemplate instantiate {{ vm_template_id.stdout }} --nic '{{ test_vnet_name }}'
+    onetemplate instantiate {{ test_vm_template_id }} --nic '{{ test_vnet_name }}'
   register: vm_id
   failed_when: "vm_id.rc != 0" 
 
@@ -423,7 +380,7 @@
   block:
   - name: Instantiate benchmark VM
     ansible.builtin.shell: >
-      onetemplate instantiate {{ vm_template_id.stdout }} --nic '{{test_vnet_name}}' --disk {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}:size=10000 --mem 2g
+      onetemplate instantiate {{ test_vm_template_id }} --nic '{{test_vnet_name}}' --disk {{ test_vm_template_image_id }}:size=10000 --mem 2g
     register: benchmarkvm_id
     failed_when: "benchmarkvm_id.rc != 0"
     # retry for robustness, e.g. in case we can only have 1 test VM running at a time for some reason, previous one is still shutting down.
@@ -511,20 +468,6 @@
       ******************************************************
       Verification report rendered to /tmp/cloud_verification_report.html
       ******************************************************
-
-- name: Cleanup test template
-  ansible.builtin.shell: |
-    onetemplate delete -R {{ vm_template_id.stdout }}
-  register: cleanup_result
-  failed_when: "cleanup_result.rc != 0"
-
-- name: Cleanup test image
-  ansible.builtin.shell: |
-    oneimage delete {{image_output.stdout | from_json | json_query('VMTEMPLATE.TEMPLATE.DISK.IMAGE_ID')}}
-  register: cleanup_result
-  failed_when: "cleanup_result.rc != 0"
-  retries: 10
-  delay: 10
 
 # Delete test network only when it was created by us
 #
