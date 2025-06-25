@@ -1,0 +1,20 @@
+---
+- name: Set host_id for this iteration
+  ansible.builtin.set_fact:
+    host_id: "{{ item.split(',')[0] }}"
+
+- name: "Host id: {{ host_id }} -- Fetch VM ID for this host"
+  ansible.builtin.command: onevm list -l ID --csv --filter NAME=conn-mtx-vm-on-host-{{ host_id }} --no-header
+  register: vm_id_result
+  failed_when: vm_id_result.rc != 0
+  changed_when: false
+
+- name: "Host id: {{ host_id }} -- Terminate VM for this host"
+  ansible.builtin.command: onevm terminate {{ vm_id_result.stdout }}
+  register: terminate_result
+  failed_when: terminate_result.rc != 0
+
+- name: "Host id: {{ host_id }} -- Delete VM Group"
+  ansible.builtin.command: onevmgroup delete only-host-{{ host_id }}
+  register: vmgroup_delete
+  failed_when: vmgroup_delete.rc != 0
