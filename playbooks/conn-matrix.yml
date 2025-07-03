@@ -58,26 +58,52 @@
           register: host_ids_and_names
           changed_when: false
 
-        - name: Display host ID mapping to hostnames
-          debug:
-            msg: "Found OpenNebula hosts with IDs: {{ host_ids_and_names.stdout_lines }}"
+        - name: Get list of OpenNebula host to "hostname_cmd" mapping
+          shell: onehost list -j
+          register: host_list_json
+          changed_when: false
+          no_log: true
+
+        - name: Set fact with host to "hostname_cmd" mapping
+          set_fact:
+            host_name_to_hostname_cmd: >-
+                {{
+                  dict(
+                    (host_list_json.stdout | from_json).HOST_POOL.HOST
+                    | map(attribute='NAME')
+                    | zip(
+                        (host_list_json.stdout | from_json).HOST_POOL.HOST
+                        | map(attribute='TEMPLATE')
+                        | map(attribute='HOSTNAME')
+                      )
+                  )
+                }}
 
         - name: Create a dedicated VM group and VM for each host
           ansible.builtin.include_tasks: tasks/conn_matrix_per_host.yml
           loop: "{{ host_ids_and_names.stdout_lines }}"
 
-        - name: Get VM host_name to VM IP mapping
+        - name: Get VM host to VM IP mapping
           shell: onevm list -l HOST,IP --csv --no-header
           register: vm_host_ip_lines
           changed_when: false
 
-        - name: Extract host_name to VM IP mapping
+        - name: Extract host to VM IP mapping
           set_fact:
             host_name_to_vm_ip: >-
-              {{ dict(
-                vm_host_ip_lines.stdout_lines | 
-                map('split', ',') | list
-              ) }}
+              {{
+                dict(
+                  vm_host_ip_lines.stdout_lines
+                  | map('split', ',')
+                  | map('first')
+                  | map('extract', host_name_to_hostname_cmd)
+                  | zip(
+                      vm_host_ip_lines.stdout_lines
+                      | map('split', ',')
+                      | map('last')
+                    )
+                )
+              }}
 
 - hosts: "{{ node_group | d('node') }}"
   gather_facts: false
