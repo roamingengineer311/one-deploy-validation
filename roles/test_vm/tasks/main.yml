@@ -122,4 +122,4 @@
     onevnet delete "{{ validation.vnet.name }}"
   register: cleanup_result
   failed_when: "cleanup_result.rc != 0"
-  when: validation.create_vnet
+  when: validation.create_vnet and not validation.check_connection

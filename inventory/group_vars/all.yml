@@ -6,6 +6,10 @@ validation:
   check_connection: true
   storage_benchmark: true
   create_vnet: true
+  conn_matrix:
+    bridge_name: br-test
+    ping_count: 10
+    vnet_name: vxlan
   vm:
     market_name: 'Alpine Linux 3.21'
     template_extra: |
@@ -18,7 +22,7 @@ validation:
     phydev: ''
     network_address: '10.0.0.0'
     network_mask: '255.255.255.0'
-    dns: '10.0.0.1'
+    dns: '8.8.8.8'
     gateway: '10.0.0.1'
     ar:
       - type: "IP4"
