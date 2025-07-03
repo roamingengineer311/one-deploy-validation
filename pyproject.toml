@@ -12,5 +12,6 @@ skip-install = true
 installer = "uv"
 dependencies = [
   "ansible-core",
-  "jmespath"
+  "jmespath",
+  "netaddr"
 ]

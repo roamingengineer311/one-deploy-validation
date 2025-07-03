@@ -1,0 +1,24 @@
+---
+all:
+  vars:
+    ansible_user: root
+    ensure_keys_for: [root]
+
+    test_vnet_name: public
+    conn_matrix_bridge_name: br0
+    conn_matrix_vnet_name: public
+
+    execute_storage_benchmarking: false
+    verification_check_fireedge_ui: false
+
+    one_version: '7.0'
+
+frontend:
+  hosts:
+    fe: { ansible_host: 172.20.0.3 }
+
+node:
+  hosts:
+    h1: { ansible_host: 172.20.0.4 }
+    h2: { ansible_host: 172.20.0.5 }
+    # h3: { ansible_host: 172.20.0.6 }

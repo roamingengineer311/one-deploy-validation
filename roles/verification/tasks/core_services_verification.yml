@@ -167,47 +167,49 @@
   set_fact:
     verification_result: "{{ verification_result | combine({'Verify one-flow service port is open on the server' : 'ok'}) }}"
 
-- name: Verify fireedge GUI stops and starts
-  ansible.builtin.shell: |
-    systemctl stop opennebula-fireedge && systemctl start opennebula-fireedge
-    sleep 3
-    systemctl status opennebula-fireedge | grep Active | grep -o '(running)'
-  register: fireedge_status
-  failed_when: "'running' not in fireedge_status.stdout"
+- block:
+  - name: Verify fireedge GUI stops and starts
+    ansible.builtin.shell: |
+      systemctl stop opennebula-fireedge && systemctl start opennebula-fireedge
+      sleep 3
+      systemctl status opennebula-fireedge | grep Active | grep -o '(running)'
+    register: fireedge_status
+    failed_when: "'running' not in fireedge_status.stdout"
 
-- name: Verify fireedge GUI stops & starts
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Verify fireedge GUI stops and starts' : 'ok'}) }}"
+  - name: Verify fireedge GUI stops & starts
+    set_fact:
+      verification_result: "{{ verification_result | combine({'Verify fireedge GUI stops and starts' : 'ok'}) }}"
 
-- name: Verify fireedge service is configured to start at boot time
-  ansible.builtin.shell: >
-    systemctl status opennebula-fireedge | grep enabled
-  register: fireedge_enabled
-  failed_when: "'enabled' not in fireedge_enabled.stdout"
+  - name: Verify fireedge service is configured to start at boot time
+    ansible.builtin.shell: >
+      systemctl status opennebula-fireedge | grep enabled
+    register: fireedge_enabled
+    failed_when: "'enabled' not in fireedge_enabled.stdout"
 
-- name: Verify fireedge GUI enabled
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Verify fireedge GUI is enabled to start automatically' : 'ok'}) }}"
+  - name: Verify fireedge GUI enabled
+    set_fact:
+      verification_result: "{{ verification_result | combine({'Verify fireedge GUI is enabled to start automatically' : 'ok'}) }}"
 
-- name: Fireedge service listens on the server
-  ansible.builtin.shell: >
-    ss -tlpn | grep $(grep -A1 'FireEdge server port' /etc/one/fireedge-server.conf | grep port: | awk '{print $2}')
-  register: firedge_socket
-  failed_when: "firedge_socket.rc != 0"
+  - name: Fireedge service listens on the server
+    ansible.builtin.shell: >
+      ss -tlpn | grep $(grep -A1 'FireEdge server port' /etc/one/fireedge-server.conf | grep port: | awk '{print $2}')
+    register: firedge_socket
+    failed_when: "firedge_socket.rc != 0"
 
-- name: Verify fireedge GUI listens on the server
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Verify fireedge GUI listens port' : 'ok'}) }}"
+  - name: Verify fireedge GUI listens on the server
+    set_fact:
+      verification_result: "{{ verification_result | combine({'Verify fireedge GUI listens port' : 'ok'}) }}"
 
-- name: Connect to a fireedge server
-  ansible.builtin.shell: >
-    curl "{{ firedge_socket.stdout.split()[3] }}"
-  register: connection_status
-  failed_when: "connection_status.rc != 0"
+  - name: Connect to a fireedge server
+    ansible.builtin.shell: >
+      curl "{{ firedge_socket.stdout.split()[3] }}"
+    register: connection_status
+    failed_when: "connection_status.rc != 0"
 
-- name: Verify connection to a fireedge server
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Verify connection to a fireedge server' : 'ok'}) }}"
+  - name: Verify connection to a fireedge server
+    set_fact:
+      verification_result: "{{ verification_result | combine({'Verify connection to a fireedge server' : 'ok'}) }}"
+  when: verification_check_fireedge_ui
 
 - name: Get registered hosts
   ansible.builtin.shell: >
@@ -218,7 +220,7 @@
 - name: Get hosts list
   set_fact:
     hosts_list: "{{ onehost_list.stdout | from_json | json_query('HOST_POOL.HOST[*].{id: ID, hostname: NAME, state: STATE}') }}"
-  failed_when: "connection_status.rc != 0"
+  failed_when: "onehost_list.rc != 0"
 
 - name: Verify hosts list
   set_fact:

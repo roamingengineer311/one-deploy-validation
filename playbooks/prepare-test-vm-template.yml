@@ -5,7 +5,7 @@
         block:
           - name: Download test VM template and image from the Marketplace
             ansible.builtin.shell: |
-              onemarketapp export $(onemarketapp list -f NAME='{{ test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{test_vm_name}}'
+              onemarketapp export $(onemarketapp list -f NAME='{{ _test_vm_name }}' -l ID --no-header) -d $(onedatastore list -f TYPE=img -l ID --no-header | head -n 1) '{{_test_vm_name}}'
             register: vm_download
             # success when: rc == 0 or rc == 255 and 'NAME is already taken by IMAGE' in stderr
             failed_when: "vm_download.rc != 0 and (vm_download.rc != 255 or 'NAME is already taken by IMAGE' not in vm_download.stderr)"
@@ -20,7 +20,7 @@
 
           - name: Get existing VM template ID
             ansible.builtin.shell: >
-              onetemplate list --csv -f NAME='{{ test_vm_name }}' -l ID --no-header
+              onetemplate list --csv -f NAME='{{ _test_vm_name }}' -l ID --no-header
             register: existing_vm_template_id
             failed_when: "existing_vm_template_id.rc != 0"
             when: vm_download.rc == 255 and 'NAME is already taken by IMAGE' in vm_download.stderr
