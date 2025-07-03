@@ -3,11 +3,14 @@
 # Do we want check connection to the test VM? network might be blocked from FE
 test_vm_check_connection: false
 
-# Should we create a test network or reuse existing net? Existin network defined in {{test_vnet_name}} var
+#
+execute_storage_benchmarking: false
+
+# Should we create a test network or reuse existing net? Existin network defined in {{validation.vnet.name}} var
 create_test_network: false
 
 # Vars for the test network
-test_vnet_name: 'VLAN_580'
+validation.vnet.name: 'VLAN_580'
 test_bridge_name: 'br-test'
 test_phydev: 
 

@@ -3,6 +3,7 @@
   tasks:
     - name: Set playbook variables for Connectivity Matrix
       set_fact:
+        # TODO: refactor for the hierarchy of variables
         _conn_matrix_bridge_name: "{{ conn_matrix_bridge_name | d('br-default') }}"
         _conn_matrix_ping_count: "{{ conn_matrix_ping_count | d(10) }}"
         _conn_matrix_vnet_name: "{{ conn_matrix_vnet_name | d('vnet-default') }}"
@@ -11,7 +12,7 @@
 
     - name: Set playbook variables for test VM
       set_fact:
-        _test_vm_name: "{{ test_vm_name | d('Alpine Linux 3.21') }}"
+        _test_vm_name: "{{ validation.vm.market_name | d('Alpine Linux 3.21') }}"
         # NOTE: Optional parameters, can be overridden in the inventory file
         # test_vm_template_extra: |
         #    MEMORY=256
@@ -30,7 +31,7 @@
 # Will launch verification framework on the frontends
 - hosts: "{{ frontend_group | d('frontend') }}"
   roles:
-    - role: verification
+    - role: validation
 
 # Run network tests on the hypervisor hosts
 - hosts: "{{ node_group | d('node') }}"

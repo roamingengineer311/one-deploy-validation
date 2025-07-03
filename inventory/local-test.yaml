@@ -4,6 +4,7 @@ all:
     ansible_user: root
     ensure_keys_for: [root]
 
+    # TODO: refactor for the hierarchy of variables
     test_vnet_name: public
     conn_matrix_bridge_name: br0
     conn_matrix_vnet_name: public

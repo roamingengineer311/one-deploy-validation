@@ -1,2 +1,27 @@
 ---
 ansible_python_interpreter: /usr/bin/python3
+
+validation:
+  core_services: true
+  check_connection: true
+  storage_benchmark: true
+  create_vnet: true
+  vm:
+    market_name: 'Alpine Linux 3.21'
+    template_extra: |
+      MEMORY="512"
+  vnet:
+    name: 'VLAN_580'
+    desc: 'A test network for post-deployment cloud verification'
+    bridge: 'br-test'
+    vn_mad: 'dummy'
+    phydev: ''
+    network_address: '10.0.0.0'
+    network_mask: '255.255.255.0'
+    dns: '10.0.0.1'
+    gateway: '10.0.0.1'
+    ar:
+      - type: "IP4"
+        ip: '10.0.0.10'
+        size: '10'
+
