@@ -9,7 +9,7 @@ validation:
   conn_matrix:
     bridge_name: br-test
     ping_count: 10
-    vnet_name: vxlan
+    vnet_name: VLAN_580
   vm:
     market_name: 'Alpine Linux 3.21'
     template_extra: |
