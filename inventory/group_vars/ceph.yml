@@ -1,5 +1,0 @@
----
-ceph_origin: distro
-ceph_stable_release: squid
-configure_firewall: false
-no_log_on_ceph_key_tasks: false

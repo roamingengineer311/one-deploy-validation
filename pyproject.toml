@@ -1,31 +1,17 @@
 [project]
-name = "engineering-deploy"
+name = "one-deploy-validation"
 version = "0.0.0"
-description = "OpenNebula Engineering Ansible Playbooks"
+description = "OpenNebula Engineering Ansible Playbooks for Deployment Validation"
 authors = ["OpenNebula <contact@opennebula.io>"]
 license = "Apache-2.0"
 readme = "README.md"
 requires-python = ">=3.9"
 
-[tool.hatch.envs.default]
+[tool.hatch.envs.validation-default]
 skip-install = true
 installer = "uv"
 dependencies = [
-  "ansible-core<2.17",
-  "ansible-lint",
-  "molecule",
-  "netaddr",
-  "pyone",
+  "ansible-core",
   "jmespath",
-]
-
-[tool.hatch.envs.ceph]
-skip-install = true
-installer = "uv"
-dependencies = [
-  "ansible-core<2.16",
-  "molecule",
-  "netaddr",
-  "pyone",
-  "setuptools",
+  "netaddr"
 ]

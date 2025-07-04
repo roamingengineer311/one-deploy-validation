@@ -1,7 +1,0 @@
----
-execute_conn_matrix: false
-conn_matrix_bridge_name: br0
-conn_matrix_ping_count: 10
-conn_matrix_vnet_name: vxlan
-# Also uses the 'test_vm_name' to define the Marketplace App name for test VM instantiation
-# and the 'test_vm_template_extra' variable to extend VM template if it is defined
