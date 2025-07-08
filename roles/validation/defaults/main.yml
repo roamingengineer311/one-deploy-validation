@@ -1,0 +1,18 @@
+---
+validation:
+  # Check if OpenNebula services are running
+  core_services: true
+  # List of services to check enabled, stop and restart
+  service_list:
+    - name: opennebula.service
+      desc: OpenNebula core (oned)
+    - name: opennebula-gate.service
+      desc: OpenNebula gate
+    - name: opennebula-flow.service
+      desc: OpenNebula flow
+    # NOTE: Scheduler service is always checked in earlier than 6.99 versions
+    # - name: opennebula-scheduler.service
+    #   desc: OpenNebula Scheduler
+    - name: opennebula-fireedge.service
+      desc: OpenNebula Fireedge GUI
+  check_fireedge_ui: true
