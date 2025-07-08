@@ -1,4 +1,6 @@
 ---
+ansible_python_interpreter: /usr/bin/python3
+
 validation:
   # Check if OpenNebula services are running
   core_services: true
@@ -10,9 +12,17 @@ validation:
       desc: OpenNebula gate
     - name: opennebula-flow.service
       desc: OpenNebula flow
-    # NOTE: Scheduler service is always checked in earlier than 6.99 versions
-    # - name: opennebula-scheduler.service
-    #   desc: OpenNebula Scheduler
-    - name: opennebula-fireedge.service
-      desc: OpenNebula Fireedge GUI
-  check_fireedge_ui: true
+  check_fireedge_ui: false
+  run_storage_benchmark: false
+  run_network_benchmark: true
+  create_vnet: false
+  conn_matrix:
+    bridge_name: br0
+    vnet_name: public
+  vm:
+    check_connection: false
+    market_name: 'Alpine Linux 3.21'
+    # template_extra: |
+    #   MEMORY="512"
+
+

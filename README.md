@@ -31,7 +31,7 @@ The development of the tests should be structured in [playbooks](./playbooks/) a
 1. To execute `ansible-playbook` you can run
 
    ```shell
-   make I=inventory/example.yml validation
+   make I=inventory/reference/example.yml validation
    ```
 
 ## Validation Results

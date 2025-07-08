@@ -163,7 +163,7 @@
   - name: Verify connection to a fireedge server
     set_fact:
       verification_result: "{{ verification_result | combine({'Verify connection to a fireedge server' : 'ok'}) }}"
-  when: verification_check_fireedge_ui
+  when: validation.check_fireedge_ui
 
 - name: Get registered hosts
   ansible.builtin.shell: >
@@ -175,18 +175,18 @@
   ignore_errors: true
   set_fact:
     single_host_list: "{{ onehost_list.stdout | from_json | json_query('HOST_POOL.HOST.{id: ID, hostname: NAME, state: STATE}') }}"
-  failed_when: "connection_status.rc != 0"
+  failed_when: "onehost_list.rc != 0"
 
 - name: Create host list with single host list
-  when: single_host_list
+  when: single_host_list.hostname is not none
   set_fact:
     hosts_list: [ "{{ single_host_list }}"]
 
 - name: Get hosts list
-  when: hosts_list is undefined
+  when: single_host_list.hostname is none
   set_fact:
     hosts_list: "{{ onehost_list.stdout | from_json | json_query('HOST_POOL.HOST[*].{id: ID, hostname: NAME, state: STATE} || HOST_POOL.HOST.{id: ID, hostname: NAME, state: STATE}') }}"
-  failed_when: "connection_status.rc != 0"
+  failed_when: "onehost_list.rc != 0"
 
 - name: Verify hosts list
   set_fact:

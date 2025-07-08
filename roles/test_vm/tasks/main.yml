@@ -10,7 +10,7 @@
       until: gw_ping_result.rc == 0
       retries: 10
       delay: 10
-      when: validation.check_connection
+      when: validation.vm.check_connection
 
     - name: Render vnet config
       template:
@@ -28,10 +28,9 @@
         path: /var/tmp/vnet_{{ validation.vnet.name }}.template
         state: absent
 
-- name: Verify host offline and then set online
-  set_fact:
-    verification_result: "{{ (verification_result | default({})) | combine({'Test network creation' : 'ok'}) }}"
-  when: validation.create_vnet 
+    - name: Verify test network creation
+      set_fact:
+        verification_result: "{{ (verification_result | default({})) | combine({'Test network creation' : 'ok'}) }}"
 
 - name: Verify that VM image is in ready state
   ansible.builtin.shell: >
@@ -66,7 +65,7 @@
     verification_result: "{{ verification_result | combine({'Test VM instantiation' : 'ok' }) }}"
 
 - name: Check connection to VM
-  when: validation.check_connection
+  when: validation.vm.check_connection
   block:
   - name: Attach NIC to test VM
     ansible.builtin.shell: >
@@ -79,7 +78,6 @@
     until: vm_state_result.stdout is search('3')
     retries: 10
     delay: 5
-    #when: validation.check_connection
 
   - name: Get VM IP
     ansible.builtin.shell: >
@@ -94,12 +92,10 @@
     until: vm_ping_result.rc == 0
     retries: 10
     delay: 10
-    #when: validation.check_connection
   
   - name: Record connection status to test VM
     set_fact:
       verification_result: "{{ verification_result | combine({'Connection to the test VM instance' : 'ok' }) }}"
-    #when: validation.check_connection
 
 - name: Delete test VM
   ansible.builtin.shell: |
@@ -122,4 +118,4 @@
     onevnet delete "{{ validation.vnet.name }}"
   register: cleanup_result
   failed_when: "cleanup_result.rc != 0"
-  when: validation.create_vnet and not validation.check_connection
+  when: validation.create_vnet and not validation.vm.check_connection

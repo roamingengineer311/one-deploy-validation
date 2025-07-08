@@ -81,4 +81,4 @@
     register: cleanup_result
     failed_when: "cleanup_result.rc != 0"
 
-  when: validation.storage_benchmark
+  when: validation.run_storage_benchmark

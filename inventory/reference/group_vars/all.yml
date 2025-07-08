@@ -12,18 +12,21 @@ validation:
       desc: OpenNebula gate
     - name: opennebula-flow.service
       desc: OpenNebula flow
-    - name: opennebula-scheduler.service
-      desc: OpenNebula Scheduler
+    # NOTE: Scheduler service is always checked in earlier than 6.99 versions
+    # - name: opennebula-scheduler.service
+    #   desc: OpenNebula Scheduler
     - name: opennebula-fireedge.service
       desc: OpenNebula Fireedge GUI
-  check_connection: true
-  storage_benchmark: true
+  check_fireedge_ui: true
+  run_storage_benchmark: true
+  run_network_benchmark: true
   create_vnet: true
   conn_matrix:
     bridge_name: br-test
     ping_count: 10
     vnet_name: VLAN_580
   vm:
+    check_connection: true
     market_name: 'Alpine Linux 3.21'
     template_extra: |
       MEMORY="512"
@@ -41,4 +44,3 @@ validation:
       - type: "IP4"
         ip: '10.0.0.10'
         size: '10'
-
