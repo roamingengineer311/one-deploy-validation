@@ -1,4 +1,0 @@
----
-#################### TEST EXECUTION CONTROL VARIABLES ####################
-validation:
-  storage_benchmark: true

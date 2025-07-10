@@ -19,7 +19,12 @@ validation:
       desc: OpenNebula Fireedge GUI
   check_fireedge_ui: true
   run_storage_benchmark: true
+  storage_benchmark:
+    vnet_name: vxlan
   run_network_benchmark: true
+  network_benchmark:
+    iperf_port: 5201
+    iperf_test_time: 10
   create_vnet: true
   conn_matrix:
     bridge_name: br-test

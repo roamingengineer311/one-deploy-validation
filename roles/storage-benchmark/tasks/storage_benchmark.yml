@@ -12,7 +12,7 @@
   block:
   - name: Instantiate benchmark VM
     ansible.builtin.shell: >
-      onetemplate instantiate {{ test_vm_template_id }} --nic '{{validation.vnet.name}}' --disk {{ test_vm_template_image_id }}:size=10000 --mem 2g
+      onetemplate instantiate {{ test_vm_template_id }} --nic '{{validation.storage_benchmark.vnet_name}}' --disk {{ test_vm_template_image_id }}:size=10000 --mem 2g
     register: benchmarkvm_id
     failed_when: "benchmarkvm_id.rc != 0"
     # retry for robustness, e.g. in case we can only have 1 test VM running at a time for some reason, previous one is still shutting down.
@@ -81,4 +81,4 @@
     register: cleanup_result
     failed_when: "cleanup_result.rc != 0"
 
-  when: validation.run_storage_benchmark
+  when: validation.run_storage_benchmark | d(true)

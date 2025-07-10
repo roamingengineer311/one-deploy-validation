@@ -7,5 +7,5 @@
 - name: Run network benchmarking
   ansible.builtin.include_tasks:
     file: "{{ role_path }}/tasks/network_benchmark.yml"
-  when: validation.run_network_benchmark
+  when: validation.run_network_benchmark | d(true)
 
