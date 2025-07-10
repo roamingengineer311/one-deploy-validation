@@ -22,4 +22,4 @@
         ansible.builtin.file:
           path: /tmp/test_vm_template_extra.txt
           state: absent
-        when: test_vm_template_extra is defined
+        when: validation.vm.template_extra is defined

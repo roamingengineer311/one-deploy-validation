@@ -14,7 +14,7 @@
       set_fact:
         _test_vm_name: "{{ validation.vm.market_name | d('Alpine Linux 3.21') }}"
         # NOTE: Optional parameters, can be overridden in the inventory file
-        # test_vm_template_extra: |
+        # validation.vm.template_extra: |
         #    MEMORY=256
 
 - ansible.builtin.import_playbook: ./prepare-test-vm-template.yml
