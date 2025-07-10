@@ -149,6 +149,9 @@
       ss -tlpn | grep $(cat /etc/one/fireedge-server.conf | awk '/^port:/ {print $2}')
     register: firedge_socket
     failed_when: "firedge_socket.rc != 0"
+    retries: 5
+    delay: 2
+    until: firedge_socket.rc == 0
 
   - name: Verify fireedge GUI listens on the server
     set_fact:
