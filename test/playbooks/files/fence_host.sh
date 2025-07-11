@@ -16,10 +16,6 @@
 # limitations under the License.                                             #
 #--------------------------------------------------------------------------- #
 
-# LOGFILE="/tmp/fence_host_input_$(date +%Y%m%d_%H%M%S).log"
-
-set -x
-
 # @param $1 the host information in base64
 HOST_TEMPLATE=$(cat -)
 
@@ -41,6 +37,8 @@ fi
 XPATH="${XPATH} -b ${HOST_TEMPLATE}"
 
 unset i j XPATH_ELEMENTS
+
+set -x
 
 while IFS= read -r -d '' element; do
     XPATH_ELEMENTS[i++]="$element"

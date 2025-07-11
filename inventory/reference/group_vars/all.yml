@@ -49,3 +49,4 @@ validation:
       - type: "IP4"
         ip: '10.0.0.10'
         size: '10'
+  # TODO: add a reference entry for vm_ha, listing all params
