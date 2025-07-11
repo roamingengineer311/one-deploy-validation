@@ -26,7 +26,7 @@
 
 - ansible.builtin.import_playbook: ./conn-matrix.yml
 
-#- ansible.builtin.import_playbook: ./cleanup-test-vm-template.yml
+- ansible.builtin.import_playbook: ./cleanup-test-vm-template.yml
 
 # Will launch validation framework on the frontends
 - hosts: "{{ frontend_group | d('frontend') }}"
