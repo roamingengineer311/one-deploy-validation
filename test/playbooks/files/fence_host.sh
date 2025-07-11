@@ -20,13 +20,6 @@
 
 set -x
 
-# Configuration attributes
-SLEEP_TIME="1"
-RETRIES="5"
-USERNAME=""
-PASSWORD=''
-ACTION="off"
-
 # @param $1 the host information in base64
 HOST_TEMPLATE=$(cat -)
 
@@ -53,31 +46,35 @@ while IFS= read -r -d '' element; do
     XPATH_ELEMENTS[i++]="$element"
 done < <($XPATH     /HOST/ID \
                     /HOST/NAME \
-                    /HOST/TEMPLATE/FENCE_IP )
+                    /HOST/TEMPLATE/FENCE_IP \
+                    /HOST/TEMPLATE/HOST_KVM_DOMAIN )
 
 HOST_ID="${XPATH_ELEMENTS[j++]}"
 NAME="${XPATH_ELEMENTS[j++]}"
 FENCE_IP="${XPATH_ELEMENTS[j++]}"
+HOST_KVM_DOMAIN="${XPATH_ELEMENTS[j++]}"
 
-# if [ -z "$FENCE_IP" ]; then
-#     echo "Fence ip not found"
-#     exit 1
-# fi
+if [ -z "$FENCE_IP" ]; then
+    echo "FENCE_IP not found"
+    exit 1
+fi
+
+if [ -z "$HOST_KVM_DOMAIN" ]; then
+    echo "HOST_KVM_DOMAIN ip not found"
+    exit 1
+fi
 
 #-------------------------------------------------------------------------------
 # Fence
 #-------------------------------------------------------------------------------
 
-#!/bin/bash
-
-DOMAIN="one-108"
 
 OUTPUT=$(mktemp)
-fence_virsh -a 172.20.0.1 -l oneadmin -k /var/lib/one/.ssh/fence -n "$DOMAIN" -o off -vvv --ssh-options="-t '/bin/bash --login -c \"PS1=\\[EXPECT\\]# /bin/bash --norc\"'" "$@" 2>&1 | tee "$OUTPUT"
+fence_virsh -a $FENCE_IP -l oneadmin -k /var/lib/one/.ssh/fence -n "$HOST_KVM_DOMAIN" -o off -vvv --ssh-options="-t '/bin/bash --login -c \"PS1=\\[EXPECT\\]# /bin/bash --norc\"'" "$@" 2>&1 | tee "$OUTPUT"
 RC=${PIPESTATUS[0]}
 
-destroy_line=$(grep -n "Domain '$DOMAIN' destroyed" "$OUTPUT" | head -n1 | cut -d: -f1)
-fail_line=$(grep -n "error: failed to get domain '$DOMAIN'" "$OUTPUT" | head -n1 | cut -d: -f1)
+destroy_line=$(grep -n "Domain '$HOST_KVM_DOMAIN' destroyed" "$OUTPUT" | head -n1 | cut -d: -f1)
+fail_line=$(grep -n "error: failed to get domain '$HOST_KVM_DOMAIN'" "$OUTPUT" | head -n1 | cut -d: -f1)
 
 if [[ -n "$destroy_line" && -n "$fail_line" && "$destroy_line" -lt "$fail_line" ]]; then
     rm -f "$OUTPUT"
