@@ -27,7 +27,6 @@ validation:
   run_vm_ha: true
   # TODO: set only minimal variables required for this microenv
   vm_ha:
-    host_list_json_index: 0
     produce_error_method: 'if_down'
     if_down_params:
       interface_name: 'br0'

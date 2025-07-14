@@ -1,41 +1,16 @@
 - hosts: "{{ frontend_group | d('frontend') }}"
-  vars:
-    _host_list_json_index: "validation.vm_ha.host_list_json_index | default(0) | int"
   tasks:
     # Only execute these steps on a single frontend host AND when VM HA validation is enabled
     - when: (hostvars[groups[frontend_group | d('frontend')][0]]['ansible_host'] == ansible_host) and (validation.run_vm_ha | d(false))
       block:
-      - name: Get list of OpenNebula host
-        shell: onehost list -j
-        register: host_list_json
-        changed_when: false
-        no_log: true
-
-      - name: Extract host ID and NAME from host_list_json using _host_list_json_index
-        set_fact:
-          host_id: "{{(host_list_json.stdout | from_json).HOST_POOL.HOST[_host_list_json_index | int].ID}}"
-          host_name: "{{(host_list_json.stdout | from_json).HOST_POOL.HOST[_host_list_json_index | int].NAME}}"
-
-      - name: "Render vm group template for VM HA for host {{ host_id }}"
-        template:
-          src: vm-group.tmpl.j2
-          dest: /tmp/vm-group-vm-ha-on-host-{{ host_id }}.tmpl
-
-      - name: "Create OpenNebula VM Group from template file"
-        ansible.builtin.command: onevmgroup create "/tmp/vm-group-vm-ha-on-host-{{ host_id }}.tmpl"
-        register: vmgroup_create
-        changed_when: "'ID' in vmgroup_create.stdout"
-        failed_when: vmgroup_create.rc != 0 and (vmgroup_create.rc != 255 or 'NAME is already taken by VMGroup' not in vmgroup_create.stderr)
-
       - name: "Check if VM already exists"
-        ansible.builtin.command: onevm list -l ID --csv --filter NAME=test_vm_ha_on_host-{{ host_id }} --no-header
+        ansible.builtin.command: onevm list -l ID --csv --filter NAME=test_vm_ha --no-header
         register: existing_vm
         changed_when: false
 
       - name: Instantiate test VM
         ansible.builtin.shell: >
-          onetemplate instantiate {{ test_vm_template_id }} --name "test_vm_ha_on_host-{{ host_id }}" \
-          --raw "VMGROUP=[ VMGROUP_NAME=only-host-{{ host_id }}, ROLE=only-one-host]"
+          onetemplate instantiate {{ test_vm_template_id }} --name "test_vm_ha"
         register: test_vm_ha
         failed_when: "test_vm_ha.rc != 0" 
         when: existing_vm.stdout == ""
@@ -54,6 +29,19 @@
         retries: 10
         delay: 10
         when: existing_vm.stdout == ""
+
+      - name: Wait for VM come up
+        ansible.builtin.shell: >
+          onevm list --f ID={{ test_vm_ha_id }} -j
+        register: vm_info_json
+        failed_when: "vm_info_json.rc != 0"
+
+      - name: Extract HOSTNAME and HID from VM history
+        set_fact:
+          host_name: >-
+            {{ (vm_info_json.stdout | from_json).VM_POOL.VM[0].HISTORY_RECORDS.HISTORY.HOSTNAME }}
+          host_id: >-
+            {{ (vm_info_json.stdout | from_json).VM_POOL.VM[0].HISTORY_RECORDS.HISTORY.HID }}
 
       - name: Set the selected host to produce an error for VM HA Test
         set_fact:
@@ -180,28 +168,33 @@
 
         - name: Wait for VM come up on a new host
           ansible.builtin.shell: >
-            onevm list --f NAME=test_vm_ha_on_host-{{ host_id }} -l STAT --no-header
+            onevm list --f NAME=test_vm_ha -l STAT --no-header
           register: vm_state
-          failed_when: "vm_state.rc != 0"
+          failed_when: "vm_state.rc != 0 or vm_state.stdout != 'runn'"
           until: vm_state.stdout == "runn"
           retries: 10
           delay: 10
 
+        - name: Get new VM hostname after recovery
+          ansible.builtin.shell: >
+            onevm list --f NAME=test_vm_ha -l HOST --no-header
+          register: new_vm_hostname
+          failed_when: "new_vm_hostname.rc != 0"
+
+        - name: Debug new VM hostname after recovery
+          debug:
+            msg: "New VM hostname after recovery: {{ new_vm_hostname.stdout | trim }}"
+
         - name: Delete test VM
           ansible.builtin.shell: |
-            onevm terminate --hard test_vm_ha_on_host-{{ host_id }}
+            onevm terminate --hard test_vm_ha
           register: cleanup_result
           failed_when: "cleanup_result.rc != 0"
 
         - name: Wait until the test VM is deleted
           ansible.builtin.shell: >
-            onevm show -j test_vm_ha_on_host-{{ host_id }} | jq -r .VM.STATE  
+            onevm show -j test_vm_ha | jq -r .VM.STATE  
           register: vm_state_result
           until: vm_state_result.stdout is search('6')
           retries: 10
           delay: 10
-
-        - name: "Delete VM Group"
-          ansible.builtin.command: onevmgroup delete only-host-{{ host_id }}
-          register: vmgroup_delete
-          failed_when: vmgroup_delete.rc != 0
