@@ -49,4 +49,10 @@ validation:
       - type: "IP4"
         ip: '10.0.0.10'
         size: '10'
-  # TODO: add a reference entry for vm_ha, listing all params
+  run_vm_ha: false
+  vm_ha:
+    produce_error_method: 'if_down'
+    if_down_params:
+      interface_name: 'br-test'
+    fencing_check_retries: 8
+    fencing_check_delay: 60

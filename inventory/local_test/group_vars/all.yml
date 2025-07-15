@@ -25,11 +25,8 @@ validation:
     # template_extra: |
     #   MEMORY="512"
   run_vm_ha: true
-  # TODO: set only minimal variables required for this microenv
   vm_ha:
     produce_error_method: 'if_down'
     if_down_params:
       interface_name: 'br0'
-    fencing_check_retries: 8
-    fencing_check_delay: 60
 
