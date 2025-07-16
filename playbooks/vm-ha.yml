@@ -20,7 +20,7 @@
           test_vm_ha_id: "{{ test_vm_ha.stdout.split(':')[1] | trim }}"
         when: existing_vm.stdout == ""
 
-      - name: Wait for VM come up
+      - name: Wait for VM to be in running state
         ansible.builtin.shell: >
           onevm list --f ID={{ test_vm_ha_id }} -l STAT --no-header
         register: vm_state
@@ -30,7 +30,7 @@
         delay: 10
         when: existing_vm.stdout == ""
 
-      - name: Wait for VM come up
+      - name: Fetch VM information in JSON format
         ansible.builtin.shell: >
           onevm list --f ID={{ test_vm_ha_id }} -j
         register: vm_info_json
@@ -186,7 +186,7 @@
           set_fact:
             verification_result: "{{ verification_result | combine({'VM HA: error hook successful': 'ok'}) }}"
 
-        - name: Wait for VM come up on a new host
+        - name: Wait for VM to be in running state on a new host
           ansible.builtin.shell: >
             onevm list --f ID={{ test_vm_ha_id }} -l STAT --no-header
           register: vm_state
