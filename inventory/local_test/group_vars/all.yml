@@ -24,5 +24,9 @@ validation:
     market_name: 'Alpine Linux 3.21'
     # template_extra: |
     #   MEMORY="512"
-
+  run_vm_ha: true
+  vm_ha:
+    produce_error_method: 'if_down'
+    if_down_params:
+      interface_name: 'br0'
 

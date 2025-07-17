@@ -14,7 +14,7 @@
         ansible.builtin.shell: |
           oneimage delete {{ test_vm_template_image_id }}
         register: cleanup_result
-        failed_when: "cleanup_result.rc != 0"
+        failed_when: "cleanup_result.rc != 0 and 'Error getting image' not in cleanup_result.stderr"
         retries: 10
         delay: 10
 
