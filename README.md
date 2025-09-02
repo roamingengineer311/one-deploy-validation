@@ -26,7 +26,10 @@ The development of the tests should be structured in [playbooks](./playbooks/) a
 
 ## Inventory/Execution
 
-1. Inventories are kept in the [inventory](./inventory/) directory, please take a look at [example.yml](./inventory/example.yml)
+1. Inventories are kept in the [inventory](./inventory/) directory, please take a look at [example.yml](./inventory/reference/example.yml)
+
+1. Customize the configuration of the validation testcases by setting the enabler flags (`validation.run_*` booleans) in [all.yml](./inventory/reference/group_vars/all.yml). This file contains the recommended configuration that should be tested on most deployments. Always intend to enable all testcases that are relevant for the deployment (for example, if VM HA or FE HA are configured, enable those testcases as well). 
+If any testcase is disabled compared to the current [all.yml](./inventory/reference/group_vars/all.yml), please provide justification in addition to the generated HTML reports.
 
 1. To execute `ansible-playbook` you can run
 
@@ -41,3 +44,4 @@ The execution of the all the tests produces the following output files on the An
 - `/tmp/cloud_verification_report.html`
 - `/tmp/conn-matrix-report.html`
 - `/tmp/conn-matrix-raw-data.json`
+- `/tmp/fe_ha_report.html`

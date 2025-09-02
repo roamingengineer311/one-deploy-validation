@@ -3,7 +3,7 @@
 __pycache__/
 /inventory/.one-deploy/
 /inventory/*.yml
-!/inventory/example.yml
+!/inventory/reference/example.yml
 .vscode
 .ansible/
 inventory/reference/local-ha.yml

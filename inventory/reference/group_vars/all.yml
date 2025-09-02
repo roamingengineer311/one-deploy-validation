@@ -2,54 +2,63 @@
 ansible_python_interpreter: /usr/bin/python3
 
 validation:
-  # Check if OpenNebula services are running
-  core_services: true
-  run_ha_verifications: true 
-  # List of services to check enabled, stop and restart
-  service_list:
-    - name: opennebula.service
-      desc: OpenNebula core (oned)
-    - name: opennebula-gate.service
-      desc: OpenNebula gate
-    - name: opennebula-flow.service
-      desc: OpenNebula flow
-    # NOTE: Scheduler service is always checked in earlier than 6.99 versions
-    # - name: opennebula-scheduler.service
-    #   desc: OpenNebula Scheduler
-    - name: opennebula-fireedge.service
-      desc: OpenNebula Fireedge GUI
-  check_fireedge_ui: true
+
+  run_core_services: true
+  core_services:
+    # List of services to check enabled, stop and restart
+    service_list:
+      - name: opennebula.service
+        desc: OpenNebula core (oned)
+      - name: opennebula-gate.service
+        desc: OpenNebula gate
+      - name: opennebula-flow.service
+        desc: OpenNebula flow
+      # NOTE: Scheduler service is always checked in earlier than 6.99 versions
+      # - name: opennebula-scheduler.service
+      #   desc: OpenNebula Scheduler
+      - name: opennebula-fireedge.service
+        desc: OpenNebula Fireedge GUI
+      # Add other services if more should be checked.
+    check_fireedge_ui: true
+
   run_storage_benchmark: true
   storage_benchmark:
     vnet_name: vxlan
+
   run_network_benchmark: true
   network_benchmark:
     iperf_port: 5201
     iperf_test_time: 10
-  create_vnet: true
+
+  run_conn_matrix: true
   conn_matrix:
     bridge_name: br-test
     ping_count: 10
     vnet_name: VLAN_580
-  vm:
-    check_connection: true
-    market_name: 'Alpine Linux 3.21'
-    template_extra: |
-      MEMORY="512"
-  vnet:
-    name: 'VLAN_580'
-    desc: 'A test network for post-deployment cloud verification'
-    bridge: 'br-test'
-    vn_mad: 'dummy'
-    phydev: ''
-    network_address: '10.0.0.0'
-    network_mask: '255.255.255.0'
-    dns: '8.8.8.8'
-    gateway: '10.0.0.1'
-    ar:
-      - type: "IP4"
-        ip: '10.0.0.10'
-        size: '10'
+
+  run_test_vm: true
+  test_vm:
+    vm:
+      check_connection: true
+      market_name: 'Alpine Linux 3.21'
+      template_extra: |
+        MEMORY="512"
+    create_vnet: true
+    vnet:
+      name: 'tes-vnet'
+      desc: 'A test network for post-deployment cloud verification'
+      bridge: 'br-test'
+      vn_mad: 'dummy'
+      phydev: 'eth1'
+      network_address: '192.168.150.100'
+      network_mask: '255.255.255.0'
+      dns: '8.8.8.8'
+      gateway: '192.168.150.1'
+      ar:
+        - type: "IP4"
+          ip: '192.168.150.100'
+          size: '10'
+
   run_vm_ha: false
   vm_ha:
     produce_error_method: 'if_down'
@@ -57,6 +66,8 @@ validation:
       interface_name: 'br-test'
     fencing_check_retries: 8
     fencing_check_delay: 60
+
+  run_fe_ha: false
   fe_ha:
     one_config_path:
       - /etc/one

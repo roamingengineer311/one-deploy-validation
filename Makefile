@@ -4,7 +4,7 @@ SELF  := $(patsubst %/,%,$(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 ENV_RUN      = hatch env run -e $(1) --
 ENV_ONE_DEPLOY_VALIDATION := $(shell hatch env find validation-default)
 
-I         ?= $(SELF)/inventory/example.yml
+I         ?= $(SELF)/inventory/reference/example.yml
 INVENTORY ?= $(I)
 
 T    ?=
