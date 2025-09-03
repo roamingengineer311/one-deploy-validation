@@ -3,9 +3,12 @@ ansible_python_interpreter: /usr/bin/python3
 
 validation:
 
+  # TEST CASE NAME: Core Services
+  # DESCRIPTION: Check the status of OpenNebula core services, as listed in `service_list`,
+  # also tests the resilience of some of them by restarting. 
+  # OUTPUT: HTML document at /tmp/cloud_verification_report.html
   run_core_services: true
   core_services:
-    # List of services to check enabled, stop and restart
     service_list:
       - name: opennebula.service
         desc: OpenNebula core (oned)
@@ -21,21 +24,42 @@ validation:
       # Add other services if more should be checked.
     check_fireedge_ui: true
 
+  # TEST CASE NAME: Storage Benchmark
+  # DESCRIPTION: Instantiates a VM for running storage benchmark from it. The VM needs to
+  # have public internet access to install dependencies. The VM's connected network can
+  # be configured.
+  # OUTPUT: HTML document at /tmp/cloud_verification_report.html
   run_storage_benchmark: true
   storage_benchmark:
     vnet_name: vxlan
 
+  # TEST CASE NAME: Network Benchmark
+  # DESCRIPTION: Runs an iperf bandwidth and ping benchmark between all hypervisor hosts
+  # that are listed in the inventory.
+  # OUTPUT: Ansible execution output in the command line
   run_network_benchmark: true
   network_benchmark:
     iperf_port: 5201
     iperf_test_time: 10
 
+  # TEST CASE NAME: Connectivity Matrix
+  # DESCRIPTION: Instantiates a test VM on each hypervisor hosts registered in the 
+  # OpenNebula cloud. From each host accesses the VM (temporarily sets up local routing
+  # on the configured bridge) and runs a connectivity test to all other VMs running on
+  # the other hosts.
+  # OUTPUT: 
+  #    - HTML document at /tmp/conn-matrix-report.html
+  #    - Raw JSON data at /tmp/conn-matrix-raw-data.json
   run_conn_matrix: true
   conn_matrix:
     bridge_name: br-test
     ping_count: 10
     vnet_name: VLAN_580
 
+  # TEST CASE NAME: VM instantiation
+  # DESCRIPTION: Fetches a VM template and image from the OpenNebula Marketplace and instantiates it.
+  # Optionally also instantiates a VNET, attaches it to the VM, and checks connectivity.
+  # OUTPUT: HTML document at /tmp/cloud_verification_report.html
   run_test_vm: true
   test_vm:
     vm:
@@ -59,6 +83,13 @@ validation:
           ip: '192.168.150.100'
           size: '10'
 
+  # TEST CASE NAME: VM High Availability
+  # DESCRIPTION: The prerequisite is to have VM HA configured, see details in OpenNebula documentation.
+  # Instantiates a VM and produces an error on its host with a configurable method (e.g. bringing the 
+  # main interface down). Checks that the error is detected and the VM is migrated to another host.
+  # NOTE: Blocks the test execution and asks for manual confirmation before the fencing occurs (that will shut
+  # down the host). Does not provide an automatic way to recover the host.
+  # OUTPUT: HTML document at /tmp/cloud_verification_report.html
   run_vm_ha: false
   vm_ha:
     produce_error_method: 'if_down'
@@ -67,6 +98,11 @@ validation:
     fencing_check_retries: 8
     fencing_check_delay: 60
 
+  # TEST CASE NAME: Front-end High Availability
+  # DESCRIPTION: The prerequisite is to have the Front-end HA configured, see details in OpenNebula documentation.
+  # Checks that config file contents are the same on all FEs, checks the selected leader, simulates a leader failover
+  # by stopping the opennebula service and verifies that a new leader is selected.
+  # OUTPUT: HTML document at /tmp/fe_ha_report.html
   run_fe_ha: false
   fe_ha:
     one_config_path:
