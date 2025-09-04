@@ -70,9 +70,11 @@
 
 # Run FE HA verfification only when variable run_ha_verifications is set to true
 - hosts: "{{ frontend_group | d('frontend') }}"
-  roles:
-    - role: fe_ha
-      when: validation.run_ha_verifications == true 
+  tasks:
+    - name: Import fe-ha playbook 
+      import_playbook:
+        name: fe-ha
+      when: validation.run_fe_ha == true
 
 
 # Run network tests on the hypervisor hosts
