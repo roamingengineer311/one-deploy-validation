@@ -36,6 +36,12 @@ Verification Report</font></b></font></p>
 
 </div></br>
 
+<h1 class="western">Metadata</h1>
+<p><b>Report generated:</b> {{ date }}</p>
+<p><b>Repository version:</b> {{ repo_version }}</p>
+<p><b>Variables used for the validation: </b></p>
+<pre>{{ validation_vars | to_nice_yaml }}</pre>
+
 <h1 class="western"><a name="_cgnw9t1vnxc8"></a> Verification of the OpenNebula cloud</h1></br>
 
 <table width="656" cellpadding="3" cellspacing="0" style="page-break-before: auto; page-break-after: auto">
@@ -74,5 +80,29 @@ Verification Report</font></b></font></p>
 	</p>
 </table>
 </div>
+
+{% if read is defined and write is defined %}
+<div class="table_component" role="region" tabindex="0">
+
+ <!-- Table with the individual tests  -->
+ <table>
+      <tr><th>Storage Benmarking</th><th></th></tr>
+      <tr><th> Banchmark param</th><th>Benachmark value</th></tr>
+      <tr><td> Read blocksize, bytes</td>  <td> {{ read.bs }}</td></tr>
+     <tr><td> Read bandwidth, MB/s</td>  <td>{{ read.bw_mbs }}MBs</td></tr>
+     <tr><td> Read Completion latency, ms </td>  <td> {{ read.clat_ms }}ms</td></tr>
+     <tr><td> Read IO depth </td>  <td> {{read.iodepth}}</td></tr>
+     <tr><td> Read IOps </td>  <td> {{read.iops}}</td></tr>
+     <tr><td> Write blocksize, bytes</td>  <td>{{write.bs}}</td></tr>
+     <tr><td> Write bandwidth, MB/s</td>  <td>{{write.bw_mbs}}ms</td></tr>
+     <tr><td> Write Completion latency, ms</td>  <td>{{write.clat_ms}}</td></tr>
+     <tr><td> Write IO depth</td>  <td>{{write.iodepth}}</td></tr>
+     <tr><td> Write IOps</td>  <td>{{write.iops}}</td></tr>
+
+
+    </table>
+</div>
+{% endif %}
+
 </body>
 </html>

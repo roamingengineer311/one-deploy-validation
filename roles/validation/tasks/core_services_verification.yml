@@ -31,20 +31,20 @@
   set_fact:
     verification_result: "{{ verification_result | combine({ item.desc + ' is enabled': 'ok'}) }}"
   when: ansible_facts['services'][ item.name ]['status'] | default('not-found') == 'enabled'
-  with_items: "{{ validation.service_list }}"
+  with_items: "{{ validation.core_services.service_list }}"
 
 - name: Check services restart
   ansible.builtin.service:
     name: "{{ item.name }}"
     state: restarted
   register: restarted
-  with_items: "{{ validation.service_list }}"
+  with_items: "{{ validation.core_services.service_list }}"
 
 - name: Check services restarted
   set_fact:
     verification_result: "{{ verification_result | combine({ item.desc + ' restarted': 'ok'}) }}"
   when: ansible_facts['services'][ item.name ]['state'] | default('not-found') == 'running'
-  with_items: "{{ validation.service_list }}"
+  with_items: "{{ validation.core_services.service_list }}"
 
 - name: Check oned version
   ansible.builtin.shell: >
@@ -166,7 +166,7 @@
   - name: Verify connection to a fireedge server
     set_fact:
       verification_result: "{{ verification_result | combine({'Verify connection to a fireedge server' : 'ok'}) }}"
-  when: validation.check_fireedge_ui
+  when: validation.core_services.check_fireedge_ui
 
 - name: Get registered hosts
   ansible.builtin.shell: >
@@ -251,21 +251,3 @@
 - name: Get marketplace status
   debug:
     msg: "{{ marketplace_list.stdout | from_json | json_query('MARKETPLACE_POOL.MARKETPLACE') | length }}"
-
-# Prepare report 
-- name: Render report
-  delegate_to: localhost
-  become: false
-  vars:
-    date: "{{ '%Y-%m-%d %H:%M:%S' | strftime(ansible_date_time.epoch) }}"  
-  template:
-    src: appendix-cloud-report.j2 
-    dest: /tmp/cloud_verification_report.html
-  ignore_errors: True
-
-- name: Print report location
-  ansible.builtin.debug: 
-    msg: |
-      ******************************************************
-      Verification report rendered to /tmp/cloud_verification_report.html
-      ******************************************************

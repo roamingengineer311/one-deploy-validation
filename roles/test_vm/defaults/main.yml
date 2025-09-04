@@ -1,25 +1,26 @@
 ---
 # Vars for the test network
 validation:
-  # Should we create a test network or reuse existing net? Existin network defined in {{validation.vnet.name}} var
-  create_vnet: true
-  vm:
-    check_connection: true
-    market_name: 'Alpine Linux 3.21'
-    template_extra: |
-      MEMORY="512"
-  vnet:
-    name: 'VLAN_580'
-    desc: 'A test network for post-deployment cloud verification'
-    bridge: 'br-test'
-    vn_mad: 'dummy'
-    phydev: ''
-    network_address: '10.0.0.0'
-    network_mask: '255.255.255.0'
-    dns: '8.8.8.8'
-    gateway: '10.0.0.1'
-    ar:
-      - type: "IP4"
-        ip: '10.0.0.10'
-        size: '10'
+  test_vm:
+    # Should we create a test network or reuse existing net? Existin network defined in {{validation.test_vm.vnet.name}} var
+    create_vnet: true
+    vm:
+      check_connection: true
+      market_name: 'Alpine Linux 3.21'
+      template_extra: |
+        MEMORY="512"
+    vnet:
+      name: 'VLAN_580'
+      desc: 'A test network for post-deployment cloud verification'
+      bridge: 'br-test'
+      vn_mad: 'dummy'
+      phydev: ''
+      network_address: '10.0.0.0'
+      network_mask: '255.255.255.0'
+      dns: '8.8.8.8'
+      gateway: '10.0.0.1'
+      ar:
+        - type: "IP4"
+          ip: '10.0.0.10'
+          size: '10'
 

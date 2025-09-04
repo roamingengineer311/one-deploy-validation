@@ -1,4 +1,0 @@
----
-- name: Example task
-  ansible.builtin.debug:
-    msg: Example task
