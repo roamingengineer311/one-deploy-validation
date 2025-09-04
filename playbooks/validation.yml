@@ -81,9 +81,11 @@
 
 # Run FE HA verfification only when variable run_fe_ha is set to true
 - hosts: "{{ frontend_group | d('frontend') }}"
-  roles:
-    - role: fe_ha
-      when: validation.run_fe_ha == true
+  tasks:
+    - name: Import fe-ha playbook
+      import_playbook:
+        name: fe-ha
+  when: validation.run_fe_ha == true
 
 # Render verification report
 - hosts: localhost
