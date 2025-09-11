@@ -2,10 +2,10 @@
 name = "one-deploy-validation"
 version = "0.0.0"
 description = "OpenNebula Engineering Ansible Playbooks for Deployment Validation"
-authors = ["OpenNebula <contact@opennebula.io>"]
+authors = [{ name = "OpenNebula", email = "contact@opennebula.io" }]
 license = "Apache-2.0"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 
 [tool.hatch.envs.validation-default]
 skip-install = true
