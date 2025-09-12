@@ -6,6 +6,7 @@ This repository provides a toolset for automating the validation of an OpenNebul
 
 ## Requirements
 
+We recommend using Ubuntu 22.04 or 24.04 as the host OS, where the validation is initiated.
 The following packages must be installed on the host:
 
 - `git`
@@ -37,6 +38,7 @@ The key principle is: do not modify or replace system-level Python and/or Ansibl
 ## Playbooks/Roles
 
 The development of the tests should be structured in [playbooks](./playbooks/) and [roles](./roles/) directories, following Ansible.
+The available test cases are briefly documented together with their key configuration parameters in [all.yml](./inventory/reference/group_vars/all.yml).
 
 ## Inventory/Execution
 
