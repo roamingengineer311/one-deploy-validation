@@ -8,7 +8,7 @@
         ansible.builtin.command: ssh-keygen -t rsa -b 4096 -N "" -f $HOME/.ssh/conn-matrix -q
         args:
           creates: "{{ ansible_env.HOME }}/.ssh/conn-matrix"
-      
+
       - name: Read public key
         ansible.builtin.slurp:
           src: "{{ ansible_env.HOME }}/.ssh/conn-matrix.pub"
@@ -59,7 +59,7 @@
           loop: "{{ host_ids_and_names.stdout_lines }}"
 
         - name: Get VM host to VM IP mapping
-          shell: onevm list -l HOST,IP --csv --no-header
+          shell: onevm list -f NAME~conn-mtx-vm-on-host -l HOST,IP --csv --no-header
           register: vm_host_ip_lines
           changed_when: false
 
