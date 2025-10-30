@@ -107,17 +107,13 @@
   set_fact:
     verification_result: "{{ verification_result | combine({'OpenNebula one-gate service listens on the server' : 'ok'}) }}"
 
-- name: Save one-flow listen & port on the server
-  set_fact:
-    verification_result: "{{ verification_result | combine({'Verify one-flow stops and starts' : 'ok'}) }}"
-
-- name: Verify oneflow listen & port on the server
+- name: OneFlow | Verify API port is listening
   ansible.builtin.shell: >
     ss -tlpn | grep -o $(cat /etc/one/oneflow-server.conf | awk '/^:port:/ {print $2}')
   register: oneflow_status
   failed_when: "oneflow_status.rc != 0"
    
-- name: Save one-flow listen & port on the server
+- name: OneFlow | Report API port status
   set_fact:
     verification_result: "{{ verification_result | combine({'Verify one-flow service port is open on the server' : 'ok'}) }}"
 

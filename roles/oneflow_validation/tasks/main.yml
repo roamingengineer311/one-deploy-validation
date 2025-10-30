@@ -1,0 +1,150 @@
+---
+- name: OneFlow | validation block
+  when: "'opennebula-flow.service' in (validation.core_services.service_list | default([]) | map(attribute='name') | list)"
+  block:
+  - name: OneFlow | Init OneFlow IDs
+    set_fact:
+      flow_template_id: ""
+      flow_service_id: ""
+
+  - name: OneFlow | Ensure service is running
+    become: true
+    ansible.builtin.systemd:
+      name: opennebula-flow
+      state: started
+      enabled: true
+
+  - name: OneFlow | Wait for API port
+    ansible.builtin.wait_for:
+      host: "{{ hostvars[groups[frontend_group | default('frontend')][0]].ansible_host | default('127.0.0.1') }}"
+      port: 2474
+      timeout: 60
+  
+  - name: OneFlow | Render temporary service template
+    ansible.builtin.copy:
+      dest: "/tmp/flow-smoke-tpl.json"
+      mode: '0644'
+      content: |
+        {
+          "name": "flow-smoke-svc",
+          "deployment": "straight",
+          "shutdown_action": "terminate-hard",
+          "roles": [
+            {
+              "name": "app",
+              "cardinality": 2,
+              "min_vms": 2,
+              "vm_template": {{ test_vm_template_id }}
+            }
+          ]
+        }
+  
+  - name: OneFlow | Create service template
+    ansible.builtin.shell: oneflow-template create /tmp/flow-smoke-tpl.json
+    args: { executable: /bin/bash }
+    register: flow_tpl_create
+    changed_when: true
+  
+  - name: OneFlow | Parse template ID
+    ansible.builtin.shell: |
+      echo "{{ flow_tpl_create.stdout | default('') }}" | sed -n 's/.*ID:\s*\([0-9]\+\).*/\1/p' | head -1
+    args: { executable: /bin/bash }
+    register: flow_template_id_cmd
+    changed_when: false
+  
+  - name: OneFlow | Store template ID
+    set_fact:
+      flow_template_id: "{{ flow_template_id_cmd.stdout | trim }}"
+
+  - name: OneFlow | Resolve template ID by name (fallback)
+    ansible.builtin.shell: |
+      oneflow-template list | awk '$2=="flow-smoke-svc"{print $1; exit}'
+    register: flow_tpl_id_fallback
+    changed_when: false
+    when: flow_template_id | length == 0
+  
+  - name: OneFlow | Store template ID (fallback)
+    set_fact:
+      flow_template_id: "{{ flow_tpl_id_fallback.stdout | trim }}"
+    when: flow_template_id | length == 0
+
+  - name: OneFlow | Instantiate the service
+    ansible.builtin.shell: oneflow-template instantiate {{ flow_template_id }}
+    args: { executable: /bin/bash }
+    register: flow_svc_instantiate
+    changed_when: true
+  
+  - name: OneFlow | Parse service ID
+    ansible.builtin.shell: |
+      echo "{{ flow_svc_instantiate.stdout | default('') }}" | sed -n 's/.*ID:\s*\([0-9]\+\).*/\1/p' | head -1
+    args: { executable: /bin/bash }
+    register: flow_service_id_cmd
+    changed_when: false
+  
+  - name: OneFlow | Store service ID
+    set_fact:
+      flow_service_id: "{{ flow_service_id_cmd.stdout | trim }}"
+
+  - name: OneFlow | Wait for service state RUNNING
+    ansible.builtin.shell: |
+      oneflow show {{ flow_service_id }} | grep 'SERVICE STATE' | awk '{print $4}'
+    register: flow_state_chk
+    changed_when: false
+    retries: 10 
+    delay: 10
+    until: flow_state_chk.stdout | trim == 'RUNNING'
+
+  - name: OneFlow | Report smoke summary
+    ansible.builtin.debug:
+      msg:
+        - "Flow template ID = {{ flow_template_id }}"
+        - "Service ID = {{ flow_service_id }}"
+        - "Service state = RUNNING"
+
+  - name: OneFlow | Get VM count
+    ansible.builtin.shell: |
+      oneflow show {{ flow_service_id }} | grep -A5 "ROLE app" | grep CARDINALITY | awk '{print $3}'
+    register: flow_vm_count
+    changed_when: false 
+
+  - name: OneFlow | Store smoke test result
+    set_fact:
+      verification_result: "{{ verification_result | combine({
+        'OneFlow smoke test (service/state/vms)': 
+          'service=' ~ (flow_service_id | default('N/A')) ~
+          ', state=' ~ (flow_state_chk.stdout | default('UNKNOWN')) ~
+          ', vms_qty=' ~ (flow_vm_count.stdout | default('0'))
+      }) }}"
+
+  rescue:
+    - name: OneFlow | Dump service details (on failure)
+      ansible.builtin.shell: oneflow show {{ flow_service_id }} | head -120
+      args: { executable: /bin/bash }
+      when:
+        - flow_service_id is defined
+        - (flow_service_id | trim) is match('^[0-9]+$')
+
+    - name: OneFlow | Fail block (smoke failed)
+      ansible.builtin.fail:
+        msg: "OneFlow smoke failed (tpl={{ flow_template_id | default('N/A') }}, svc={{ flow_service_id | default('N/A') }})"
+
+  always:
+    - name: OneFlow | Cleanup service
+      ansible.builtin.shell: oneflow delete {{ flow_service_id }}
+      args: { executable: /bin/bash }
+      when:
+        - flow_service_id is defined
+        - (flow_service_id | trim) is match('^[0-9]+$')
+
+    - name: OneFlow | Cleanup temporary template
+      ansible.builtin.shell: oneflow-template delete {{ flow_template_id }}
+      args: { executable: /bin/bash }
+      when:
+        - flow_template_id is defined
+        - (flow_template_id | trim) is match('^[0-9]+$')
+
+    - name: OneFlow | Cleanup VMs
+      ansible.builtin.shell: onevm list -l ID --no-header | xargs -r -n1 onevm terminate --hard
+      args: { executable: /bin/bash }
+      retries: 10 
+      delay: 10
