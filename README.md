@@ -52,7 +52,7 @@ If any testcase is disabled compared to the current [all.yml](./inventory/refere
 4. To execute `ansible-playbook` using the example template you can run
 
    ```shell
-   make I=inventory/reference/example.yml validation ANSIBLE_ARGS="-e @playbooks/report_input_vars.yml.example
+   make I=inventory/reference/example.yml validation ANSIBLE_ARGS="-e @playbooks/report_input_vars.yml.example"
    ```
 Ensure that your Python virtual environment is activated before running the playbook.
 
