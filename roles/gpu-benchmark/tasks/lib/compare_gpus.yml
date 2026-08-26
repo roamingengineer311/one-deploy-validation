@@ -1,0 +1,116 @@
+---
+- name: Reset GPU-delta accumulators
+  ansible.builtin.set_fact:
+    _gpu_delta_rows: []
+    _gpu_num: []
+    _gpu_metric_defs:
+      - {key: throughput_req_s_mean, better: higher}
+      - {key: req_latency_p95_s, better: lower}
+      - {key: ttft_p95_ms, better: lower}
+      - {key: itl_p95_ms, better: lower}
+      - {key: tpot_p95_ms, better: lower}
+
+- name: Build numeric per-GPU rows (native floats)
+  ansible.builtin.set_fact:
+    _gpu_num: >-
+      {{ _gpu_num + [{
+        'gpu': item.gpu | int,
+        'requests_successful': ((item.metrics.saturated | default({})).requests_ok
+                                | default(item.metrics.requests_successful | default(0))) | int,
+        'throughput_req_s_mean': item.metrics.throughput_req_s_mean | float,
+        'req_latency_p95_s': item.metrics.req_latency_p95_s | float,
+        'ttft_p95_ms': item.metrics.ttft_p95_ms | float,
+        'itl_p95_ms': item.metrics.itl_p95_ms | float,
+        'tpot_p95_ms': item.metrics.tpot_p95_ms | float
+      }] }}
+  loop: "{{ _model_gpu_results | selectattr('metrics', 'defined') | list }}"
+  loop_control:
+    label: "gpu {{ item.gpu }}"
+
+- name: Assess comparison confidence
+  ansible.builtin.set_fact:
+    _cmp_min_samples: "{{ _gpu_num | map(attribute='requests_successful') | map('int') | min }}"
+    _cmp_sufficient: >-
+      {{ (_gpu_num | map(attribute='requests_successful') | map('int') | min)
+         >= (gpu_benchmark.compare_min_samples | default(30) | int) }}
+    # GPUs whose load sweep was truncated (rate ladder capped by a chaotic
+    # probe) OR unsaturated (ladder ended below the knee — the slow-mode
+    # guidellm client, see parse_guidellm): their throughput is a lower
+    # bound, so a throughput gap against them is a measurement artifact,
+    # not hardware.
+    # 'in [true, "True"]' instead of 'truthy': ansible 2.18 stringifies the
+    # stored bool, and the string 'False' would pass a truthy test.
+    _cmp_truncated_gpus: >-
+      {{ ((_model_gpu_results | selectattr('metrics', 'defined')
+           | selectattr('metrics.sweep_truncated', 'defined')
+           | selectattr('metrics.sweep_truncated', 'in', [true, 'True'])
+           | map(attribute='gpu') | list)
+          + (_model_gpu_results | selectattr('metrics', 'defined')
+             | selectattr('metrics.sweep_unsaturated', 'defined')
+             | selectattr('metrics.sweep_unsaturated', 'in', [true, 'True'])
+             | map(attribute='gpu') | list)) | unique | list }}
+
+- name: Build one delta row per metric
+  ansible.builtin.set_fact:
+    _gpu_delta_rows: >-
+      {{ _gpu_delta_rows + [{
+        'metric': item.key,
+        'better': item.better,
+        'best': _best | float | round(3),
+        'worst': _worst | float | round(3),
+        'spread_pct': ((((_worst | float) - (_best | float)) / (_best | float) * 100) | abs | round(1)) if (_best | float) != 0.0 else 0.0,
+        'flagged_gpus': _flagged,
+        'note': _note,
+        'ok': (_flagged | length == 0)
+      }] }}
+  loop: "{{ _gpu_metric_defs }}"
+  loop_control:
+    label: "{{ item.key }}"
+  vars:
+    _vals: "{{ _gpu_num | map(attribute=item.key) | list }}"
+    _best: "{{ (_vals | max) if item.better == 'higher' else (_vals | min) }}"
+    _worst: "{{ (_vals | min) if item.better == 'higher' else (_vals | max) }}"
+    _bound: >-
+      {{ (_best | float) * (1 - (gpu_benchmark.llm_variance_pct | float) / 100)
+         if item.better == 'higher'
+         else (_best | float) * (1 + (gpu_benchmark.llm_variance_pct | float) / 100) }}
+    _floored: >-
+      {{ (item.key == 'throughput_req_s_mean')
+         and ((_best | float) < (gpu_benchmark.compare_min_throughput_req_s | default(1.0) | float)) }}
+    _ttft_floored: >-
+      {{ (item.key == 'ttft_p95_ms')
+         and ((((_worst | float) - (_best | float)) | abs)
+              <= (gpu_benchmark.compare_min_ttft_delta_ms | default(25) | float)) }}
+    # Sustained throughput derives from the sweep peak — a LOW value on a
+    # truncated GPU is a measurement artifact, so DIRECTIONAL suppression:
+    # only the truncated GPUs are removed from the flag list. A truncated
+    # BEST stays a valid reference (its lower bound only UNDERSTATES the
+    # spread — an untruncated sibling below the variance bound has a
+    # genuine deficit and still flags). Sync-run latency metrics are
+    # unaffected by the ladder and stay fully compared.
+    _raw_flagged: >-
+      {{ (_gpu_num | selectattr(item.key, 'lt', _bound | float) | map(attribute='gpu') | list)
+         if item.better == 'higher'
+         else (_gpu_num | selectattr(item.key, 'gt', _bound | float) | map(attribute='gpu') | list) }}
+    _flagged: >-
+      {{ [] if ((not (_cmp_sufficient | bool)) or (_floored | bool) or (_ttft_floored | bool))
+         else ((_raw_flagged | difference(_cmp_truncated_gpus))
+               if (item.key == 'throughput_req_s_mean') else _raw_flagged) }}
+    _note: >-
+      {{ ('insufficient sample (' ~ _cmp_min_samples ~ ' successful requests)') if (not (_cmp_sufficient | bool))
+         else (('TTFT delta below the noise floor (<= ' ~ (gpu_benchmark.compare_min_ttft_delta_ms | default(25)) ~ ' ms) — spread not flagged')
+               if ((_ttft_floored | bool) and (_raw_flagged | length > 0))
+         else ('below measurement floor (< ' ~ (gpu_benchmark.compare_min_throughput_req_s | default(1.0)) ~ ' req/s)' if (_floored | bool)
+               else (('sweep truncated/unsaturated on GPU ' ~ (_cmp_truncated_gpus | join(', GPU '))
+                      ~ ' — its throughput is a lower bound; gaps against it are not flagged')
+                     if ((item.key == 'throughput_req_s_mean') and (_cmp_truncated_gpus | length > 0))
+                     else ''))) }}
+
+- name: Assemble GPU delta
+  ansible.builtin.set_fact:
+    _gpu_delta:
+      variance_pct: "{{ gpu_benchmark.llm_variance_pct | float }}"
+      metrics: "{{ _gpu_delta_rows }}"
+      min_samples: "{{ _cmp_min_samples | int }}"
+      confidence: "{{ 'ok' if (_cmp_sufficient | bool) else 'low' }}"
+      status: "{{ 'flag' if (_gpu_delta_rows | rejectattr('ok') | list | length > 0) else 'ok' }}"

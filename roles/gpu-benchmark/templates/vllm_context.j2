@@ -1,0 +1,50 @@
+{# Instantiation template for the ONEAI 'vLLM Inference Engine' appliance
+   (one-apps appliances/Vllm). Context contract confirmed against config.rb:
+   ONEAPP_VLLM_MODEL_ID / _MODEL_TOKEN / _MODEL_MAX_LENGTH / _API_PORT /
+   _API_WEB / _GPU_MEMORY_UTILIZATION. There is NO tensor-parallel variable —
+   the appliance sets it automatically to the number of visible GPUs.
+   CPU/VCPU/MEMORY override the appliance template's tiny defaults (1 CPU/8G). #}
+NIC = [ NETWORK="{{ _ctx.vnet }}" ]
+{% if _ctx.host_id is defined %}
+SCHED_REQUIREMENTS = "ID=\"{{ _ctx.host_id }}\""
+{% endif %}
+{# vm_per_gpu mode attaches ONE exact device by address; the default mode
+   requests pci_count generic NVIDIA GPUs and lets the scheduler pick. #}
+{% if _ctx.pci_address is defined and (_ctx.pci_address | string | length > 0) %}
+PCI = [ SHORT_ADDRESS="{{ _ctx.pci_address }}" ]
+{% else %}
+{% for i in range(_ctx.pci_count | int) %}
+PCI = [ VENDOR="10de", CLASS="0302" ]
+{% endfor %}
+{% endif %}
+{# NUMA placement — MUTUALLY EXCLUSIVE by OpenNebula design: instantiate
+   rejects the combination with "NUMA node affinity cannot be set for pinned
+   VMs" (hit live on ONE 7.4). When the GPU node is known (vm_per_gpu mode)
+   NODE_AFFINITY wins: it guarantees the locality that matters; PIN_POLICY is
+   emitted only when no node is known. #}
+{% if (_ctx.numa_node is defined) and ((_ctx.numa_node | int(-1)) >= 0) %}
+TOPOLOGY = [ NODE_AFFINITY = "{{ _ctx.numa_node | int }}" ]
+{% elif (_ctx.pin_policy | default('') | string | length) > 0 %}
+TOPOLOGY = [ PIN_POLICY = "{{ _ctx.pin_policy }}" ]
+{% endif %}
+{# OS-disk resize. Must live IN this file: the ONE 7.2 CLI refuses to combine a
+   template file with creation options ("conflicting options: disk"), and the
+   instantiate merge REPLACES the template's DISK vector, so this is a resize,
+   not a second disk. #}
+{% if _ctx.image_id is defined and (_ctx.image_id | string | length > 0) and _ctx.disk_size_mb is defined %}
+DISK = [ IMAGE_ID = "{{ _ctx.image_id }}", SIZE = "{{ _ctx.disk_size_mb }}" ]
+{% endif %}
+CPU = "{{ gpu_benchmark.vm.vcpu }}"
+VCPU = "{{ gpu_benchmark.vm.vcpu }}"
+MEMORY = "{{ gpu_benchmark.vm.memory_mb }}"
+CONTEXT = [
+  NETWORK="YES",
+  SSH_PUBLIC_KEY="$USER[SSH_PUBLIC_KEY]",
+  ONEAPP_VLLM_API_WEB="NO"{% if _ctx.model_id is defined and _ctx.model_id %},
+  ONEAPP_VLLM_MODEL_ID="{{ _ctx.model_id }}",
+  ONEAPP_VLLM_API_PORT="{{ gpu_benchmark.vllm_context.api_port }}",
+  ONEAPP_VLLM_GPU_MEMORY_UTILIZATION="{{ gpu_benchmark.vllm_context.gpu_mem_util }}",
+  ONEAPP_VLLM_MODEL_MAX_LENGTH="{{ gpu_benchmark.vllm_context.model_max_length }}"{% if gpu_benchmark.hf_token %},
+  ONEAPP_VLLM_MODEL_TOKEN="{{ gpu_benchmark.hf_token }}"{% endif %}
+{% endif %}
+]

@@ -1,0 +1,321 @@
+---
+# Defaults for the gpu-benchmark role. Mirror storage-benchmark conventions.
+# Role defaults. User config is a TOP-LEVEL `gpu_benchmark` dict (see
+# inventory/reference/group_vars/all.yml); tasks/main.yml merges it recursively
+# over these defaults, so partial user config is safe.
+_gpu_benchmark_defaults:
+  # Benchmark phase. 'post' (default) = the normal post-deploy flow: appliance
+  # VM with GPU passthrough, driven from the frontend through OpenNebula.
+  # 'pre' = BARE-METAL baseline BEFORE the OpenNebula deploy: the same
+  # hardware + LLM benchmark runs directly on a node host's OS (no OpenNebula,
+  # no VM), results are saved next to the inventory as gpu_baseline.json, and
+  # the whole footprint is removed afterwards (clean OS). A later 'post' run
+  # loads that file automatically and reports the virtualization overhead.
+  # CLI: make validation I=... ANSIBLE_ARGS='-e gpu_benchmark_phase=pre'
+  # (the extra var overrides this key; phase=pre also skips every other
+  # validation play — OpenNebula does not exist yet).
+  phase: post
+  baremetal:
+    # Node-group inventory names to benchmark. [] = the FIRST host of the node
+    # group; 'all' = every node host; or an explicit list of inventory names.
+    hosts: []
+    # Everything the pre phase puts on the host lives under this directory
+    # (venv, HF model cache, logs, results) — cleanup is rm -rf of it.
+    workdir: /root/gpu-bench-tmp
+    # Pin vLLM to YOUR appliance's version so bare-metal and virtualized
+    # numbers are comparable — check it BEFORE the pre run (the post report
+    # caveats any mismatch, but matched versions measure pure virtualization
+    # overhead). The public-marketplace service_Vllm ships 0.17.x; the older
+    # ONEAI 'vLLM Inference Engine' appliance shipped 0.10.2.
+    vllm_version: "0.17.1"
+    # When no working NVIDIA driver is present: true = install it (cuda-keyring
+    # repo + cuda-drivers) and PURGE it again at cleanup; false = fail with a
+    # clear message. A pre-existing driver is used as-is and never touched.
+    allow_driver_install: true
+    # Post phase: flag when a virtualized metric is worse than the bare-metal
+    # baseline by more than this percentage (same noise guards as the
+    # GPU-to-GPU comparison apply).
+    baseline_tolerance_pct: 10
+    # Override the baseline file location; empty = <inventory_dir>/gpu_baseline.json.
+    baseline_file: ""
+    # The pre phase refuses to run on a host that already has OpenNebula
+    # installed (GPUs are on vfio there; the run would only litter the OS).
+    # true overrides the refusal.
+    allow_on_deployed: false
+    # NUMA-pin each bare-metal serve + load generator to the NUMA node of the
+    # GPU under test (numactl --cpunodebind --preferred). On multi-socket
+    # hosts an unpinned run measures scheduler LUCK, not the hardware: the
+    # same L40S swung 1660 -> 2685 tok/s purely on process placement.
+    # Installs numactl if missing (manifest-tracked, purged at cleanup).
+    numa_pin: true
+  # Marketplace appliance serving vLLM. Default = the ONEAI Project appliance
+  # ('vLLM Inference Engine', one-apps appliances/Vllm); the ONEAI marketplace
+  # (MARKET_MAD=one) must be registered in OpenNebula for the export to find it.
+  # The PUBLIC OpenNebula marketplace ships the same appliance as
+  # 'service_Vllm' (vLLM 0.17.x, 100 GB image). For a FAIR pre-vs-post
+  # comparison keep baremetal.vllm_version above matched to whichever
+  # appliance the post phase will actually use.
+  appliance_market_name: 'vLLM Inference Engine'
+  # Network attached to benchmark VMs. Needs egress for model/toolkit download by default.
+  vnet_name: public
+  # One appliance VM is created per model (model is fixed at instantiation via
+  # ONEAPP_VLLM_MODEL_ID). Default keeps a single ungated model that fits a
+  # >=14 GB GPU. NOTE: the appliance DEFAULTS to Qwen2.5-1.5B when no model id
+  # is passed — the health VM therefore auto-serves it and gpu_health_host.yml
+  # kills that vLLM before running cuBLAS.
+  models:
+    - "Qwen/Qwen2.5-3B-Instruct"
+  # Health VM exercises every discovered GPU; 'all' => use discovered count.
+  # This same count drives the per-GPU LLM comparison: the LLM VM attaches all
+  # of a host's GPUs and benchmarks EACH one separately (CUDA_VISIBLE_DEVICES),
+  # so a multi-GPU box yields one LLM result per GPU that we compare against each
+  # other. A single-GPU box yields one result and NO comparison.
+  gpu_count: all
+  # Benchmark VM sizing. The appliance template ships CPU=1 / MEMORY=8192 and an
+  # 8 GB disk — too small for benchmarking (1 vCPU bottlenecks the API server and
+  # skews TTFT/ITL; the model download + CUDA toolkit do not fit in 8 GB).
+  # CPU/VCPU/MEMORY are overridden via the context template; the disk is resized
+  # at instantiation (--disk <image>:size=<disk_mb>).
+  vm:
+    vcpu: 8
+    memory_mb: 16384
+    disk_mb: 40960
+    # Emitted as TOPOLOGY = [ PIN_POLICY = ... ]: '' = none (default);
+    # CORE/THREAD/SHARED pin vCPUs to dedicated host CPUs. NOTE: OpenNebula
+    # REJECTS combining this with NODE_AFFINITY ("NUMA node affinity cannot
+    # be set for pinned VMs"), so in vm_per_gpu mode, when the GPU's NUMA
+    # node is known, NODE_AFFINITY is emitted INSTEAD of this (locality wins).
+    pin_policy: ''
+  # One benchmark VM PER GPU instead of one VM with all of a host's GPUs.
+  # Each VM attaches its exact GPU (PCI SHORT_ADDRESS) and, when the host
+  # reports the device's NUMA node, gets TOPOLOGY NODE_AFFINITY to that node —
+  # so a pinned virtualized run is apples-to-apples with the NUMA-pinned
+  # bare-metal baseline. Cost: one appliance boot + model download per GPU.
+  # On multi-SOCKET hosts an unpinned all-GPUs VM cannot be NUMA-local to
+  # every card (observed: same VM, GPU node0 1568 vs node1 2052 tok/s).
+  vm_per_gpu: false
+  # Which post-deploy LLM backends to benchmark against the bare-metal
+  # baseline. 'appliance' = the marketplace vLLM VM flow (default —
+  # behavior identical to before this knob existed); 'k8s' = an RKE2
+  # cluster deployed per the OpenNebula 7.4 "AI-ready Kubernetes" guide
+  # (Service Capi + capone/capone-rke2 + nvidia gpu-operator) with one
+  # vLLM pod per GPU worker. Both together = one run, 3-way report
+  # (bare-metal | appliance | k8s).
+  # 'baremetal' as an EXTRA backend re-measures the physical numbers LIVE in
+  # the post run: the node's GPUs are temporarily released from vfio-pci to
+  # the NVIDIA driver (persistent driverctl override lifted and restored —
+  # a running VM on the GPU aborts the release), the pre-phase benchmark
+  # runs on the host, the fresh numbers replace gpu_baseline.json, and the
+  # appliance/k8s backends then compare against SAME-DAY, SAME-DRIVER
+  # physical data (no more "driver differs" caveat). Cost: ~35-45 min.
+  llm_backends: ['appliance']
+  # K8s backend settings (versions/URLs pinned to the guide,
+  # docs.opennebula.io 7.4 ai_ready_k8s). RESOURCES deliberately override
+  # the guide's examples: workers reuse vm.vcpu / vm.memory_mb — the
+  # sizing validated on the appliance flow — per the calibration rule
+  # 'best resources for correct results'. NUMA NODE_AFFINITY cannot be
+  # per-worker (one shared worker template in the chart), so K8s workers
+  # run unpinned and the report carries a caveat.
+  k8s:
+    capi_app_name: 'Service Capi'
+    release_name: gpu-bench-k8s
+    capone_chart_version: '0.1.7'
+    gpu_operator_version: 'v25.3.2'
+    router_image_url: 'https://d24fmfybwxpuhu.cloudfront.net/service_VRouter-7.0.0-0-20250528.qcow2'
+    # NOTE: the guide's pinned build ships a kernel whose headers AGE OUT
+    # of the Ubuntu archive (superseded kernels leave the index) — the
+    # gpu-operator driver container then cannot compile ("Could not
+    # resolve Linux kernel version"). When that hits, point this at a
+    # CURRENT Ubuntu 24.04 build (e.g. the public marketplace app's
+    # download URL) — the kernel must still have headers in the archive.
+    node_image_url: 'https://d24fmfybwxpuhu.cloudfront.net/ubuntu2404-7.0.0-0-20250528.qcow2'
+    worker_disk_mb: 204800
+    # XMLRPC endpoint IP the capi VM uses to reach oned; '' = auto (the
+    # benchmark vnet's bridge address on the frontend).
+    one_xmlrpc_ip: ''
+    deploy_timeout_s: 2700
+    # The capi appliance bootstrap (Rancher + Turtles + CAPI providers)
+    # pulls many images/charts; on throttled networks it varies wildly
+    # between boots (observed live: ~15 min vs >45 min on the same lab).
+    # Bounded separately from deploy_timeout_s.
+    bootstrap_timeout_s: 5400
+    # The capi VM k3s apiserver can lose its Secrets watch cache (PROVEN live
+    # 2026-08-10: cached LIST empty while quorum reads are correct) — the
+    # kubelet secret manager and cert-manager then both go blind, the CAPI core
+    # pod hangs in ContainerCreating on a secret that exists, no provider ever
+    # installs, and this backend burns its whole bootstrap budget. Restarting
+    # k3s rebuilds the cache (recovered in 15 s live). The wait loop tests the
+    # cached-vs-quorum secret LIST every ~5 min and restarts k3s ONCE. Set
+    # false to leave the appliance untouched and let the wait expire instead.
+    unwedge_apiserver_cache: true
+    # true = a FAILED k8s backend leaves the stack running for post-mortem
+    # (credential files are still removed); the next run adopts it — every
+    # deploy step is idempotent. The teardown stays full on success.
+    keep_stack_on_failure: false
+    # In-cluster hardware probe: one Job per GPU worker (CUDA devel image)
+    # compiles and runs the SAME cuBLAS SGEMM + PCIe bandwidth sources as
+    # the health flow, so the overhead table's hardware rows also get a
+    # Kubernetes value. K8s workers cannot be NUMA-pinned, so an in-pod
+    # PCIe number directly attributes (or clears) NUMA placement as the
+    # cause of an LLM-throughput gap. Honors cublas.enabled and
+    # pcie_bw.enabled individually; failures are recorded, never fatal.
+    hw_probe: true
+    # Needs nvcc: a -devel image whose CUDA is <= the gpu-operator driver
+    # ceiling (operator v25.3.2 ships the 570 branch = CUDA 12.8).
+    cuda_devel_image: 'nvcr.io/nvidia/cuda:12.8.1-devel-ubuntu24.04'
+    # Bounds pull (~2.5 GB) + compile + both benchmarks per worker.
+    hw_probe_timeout_s: 1500
+  vllm_context:
+    api_port: 8000
+    gpu_mem_util: 0.9
+    model_max_length: 1024   # ONEAPP_VLLM_MODEL_MAX_LENGTH (prompt+output context)
+  # HuggingFace token for gated models (e.g. Llama). Empty => omitted from
+  # context. Maps to the appliance's ONEAPP_VLLM_MODEL_TOKEN (exported as HF_TOKEN).
+  hf_token: ""
+  # The GuideLLM load profile — the SINGLE source of truth for BOTH phases
+  # (bare-metal pre and virtualized post use this string verbatim); that
+  # fixedness is what makes the two runs comparable. Deliberately STATIC (no
+  # jinja: a self-reference to gpu_benchmark here would recurse) and
+  # single-line (it is embedded into ssh one-liners). The max_duration
+  # constraint stays separate (guidellm_max_duration_s) because it is
+  # per-inventory tunable. warmup.value=1,mode=requests excludes each rate's
+  # first request from the stats, and ONLY takes effect with a max_requests
+  # constraint present (guidellm 0.7.1 compute_limits needs a total budget) —
+  # the never-binding count=100000 is load-bearing, do not remove it.
+  # max_concurrency=128 (guidellm default: 512) bounds the THROUGHPUT PROBE
+  # whose measured rate becomes the ceiling of the whole constant-rate
+  # ladder (SweepProfile: linspace(sync_rate, probe_rate)). At 512 the probe
+  # measures a chaotic overload collapse and is BIMODAL run-to-run (seen
+  # live on L40S: 5.5 vs 31.9 req/s -> a low roll caps the ladder below the
+  # knee and truncates the curve); at 128 (just past the measured knee
+  # concurrency of ~60-110) it measures a stable saturated rate and the
+  # ladder tops out right where the knee lives. CHANGING THIS LINE CHANGES
+  # THE MEASUREMENT — baselines recorded under another profile are not
+  # apples-to-apples (compare_baseline caveats the mismatch); re-run the
+  # pre phase after any change here.
+  guidellm_profile: >-
+    --profile 'kind=sweep,warmup.value=1,warmup.mode=requests,max_concurrency=128'
+    --constraint kind=max_requests,count=100000
+    --data 'kind=synthetic_text,prompt_tokens=512,output_tokens=256'
+  # Which guidellm request-status bucket the metrics are read from. Latency
+  # SLO metrics (TTFT/ITL/TPOT) come from the synchronous run (selected by
+  # strategy type, min-RPS fallback); the SATURATED headline comes from the
+  # PEAK of the load curve (the benchmark with max output tok/s — the max-RPS
+  # row is the overload probe and is only kept as throughput_req_s_peak).
+  guidellm_status: successful
+  # Seconds per sweep rate. Must be long enough that the synchronous phase
+  # completes MORE than one request after the warmup exclusion, or guidellm's
+  # sweep aborts ("Invalid rates ... any successful requests?"). 20 s fits a
+  # ~3B model (~2-3 s/request); a slow model (14B ~8 s/request) needs ~40 s —
+  # raise it per inventory when benchmarking large models. Longer = the whole
+  # LLM phase scales linearly (10 rates x this).
+  guidellm_max_duration_s: 20
+  # SLO gates applied to the synchronous-run metrics; null disables a gate.
+  # Defaults follow the reference doc's chat SLOs, written for GB200-class
+  # hardware — on smaller GPUs either tune per inventory or, better, add a
+  # hardware-calibrated entry to `reference:` below.
+  thresholds:
+    profile: chat
+    ttft_p95_ms: 200
+    itl_p95_ms: 50
+    min_throughput_req_s: null
+  # Hardware-calibrated reference SLOs: <nvidia-smi GPU name> -> <model id> ->
+  # PARTIAL thresholds dict merged over `thresholds` for that GPU/model combo
+  # (lib/resolve_thresholds.yml). There is no public canonical per-GPU SLO
+  # table for this fixed load profile — curate these from YOUR healthy-hardware
+  # runs, with margin. See inventory/reference/group_vars/all.yml for measured
+  # starter values. No matching entry => global thresholds apply.
+  reference: {}
+  # GPU-to-GPU comparison tolerance for the LLM metrics: on a multi-GPU host,
+  # a GPU whose throughput drops below best*(1-v/100), or whose latency rises
+  # above best*(1+v/100), relative to the BEST GPU is flagged as an outlier.
+  # (cuBLAS uses its own cublas.variance_pct.) Only ever applied when a host has
+  # more than one GPU — a single-GPU host has nothing to compare against.
+  llm_variance_pct: 20
+  # Guards that stop the GPU-to-GPU comparison from FLAGGING on measurement
+  # NOISE (observed on 2x Tesla T4: a 0.07-vs-0.09 req/s gap tripped the 20%
+  # gate, but each figure came from only 3-4 successful requests and the
+  # throughput probe completed 0/512 — a rounding-scale artifact, not a real
+  # hardware difference). compare_min_samples: a GPU must have at least this many
+  # successful requests for its metrics to be comparable, else the whole delta is
+  # marked low-confidence and nothing is flagged. compare_min_throughput_req_s:
+  # below this absolute sustained rate a relative spread% is meaningless (tiny
+  # denominator), so throughput is not flagged.
+  compare_min_samples: 30
+  compare_min_throughput_req_s: 1.0
+  # Sync-phase TTFT p95 comes from only ~a dozen requests — its tail
+  # jitters 10-20 ms run-to-run on identical hardware (seen live: 55.6 vs
+  # 38.7 ms with IDENTICAL ITL/TPOT/tok/s). A relative TTFT spread or
+  # baseline breach only flags when the ABSOLUTE delta also exceeds this
+  # floor (milliseconds) — real regressions (e.g. 200 vs 38 ms) still flag.
+  compare_min_ttft_delta_ms: 25
+  # Retry the load sweep ONCE when the ladder ends UNSATURATED (the
+  # guidellm client is bimodal — proven live 2026-08-11: in its slow mode
+  # the generator wastes ~1.4 s per request slot and the capped probe
+  # under-measures by ~15%, so the rate ladder stops below the knee and
+  # the whole run under-reports capacity by the same amount; server-side
+  # ITL is identical in both modes). Capacity is a MAX-capability metric:
+  # taking the better of two draws removes downward bias and cannot
+  # inflate the result. Cost: one extra sweep (~5 min) only on the
+  # affected GPU. The kept result is re-flagged honestly if BOTH attempts
+  # land unsaturated.
+  llm_retry_unsaturated: true
+  cublas:
+    enabled: true
+    n: 16384            # matrix dimension (matches reference doc)
+    iters: 10
+    variance_pct: 25    # flag a GPU slower than the fastest by >variance_pct (cross-GPU)
+    allow_toolkit_install: true   # set false for airgap
+  # NVIDIA DCGM diagnostics (dcgmi diag) — the vendor-standard GPU acceptance
+  # tool (memory, PCIe, thermal, NVLink). level: 1 (~seconds), 2 (~2-3 min),
+  # 3 (~30 min burn-in). Failed tests flag the host (nvidia_issues). Needs the
+  # NVIDIA apt repo in the appliance (same one the CUDA toolkit comes from).
+  dcgm:
+    enabled: true
+    level: 2
+    allow_install: true   # set false for airgap (skips when dcgmi is absent)
+    timeout_s: 900        # hard cap on the diag (level 2 ~2-3 min); RAISE for level 3 (~30 min)
+    # false = skip the diag ONLY inside the post-phase appliance VM while the
+    # bare-metal pre phase keeps running it on the host (the vendor
+    # acceptance value lives there). Use when the appliance image ships a
+    # DCGM whose 'software' test fails in the guest (seen on the 0.17.1
+    # vLLM appliance) and that known failure would keep the cluster on flag.
+    run_in_vm: true
+  # Host<->GPU PCIe transfer bandwidth (pinned-memory cudaMemcpy H2D/D2H).
+  # Validates the passthrough DATA PATH — a link can negotiate x16 yet still
+  # transfer poorly (ASPM, NUMA misplacement). min_gbs is deliberately
+  # conservative (gen3 x16 does ~12 GB/s practical, gen4 ~24): it catches
+  # catastrophic passthrough faults without false positives on older links.
+  pcie_bw:
+    enabled: true
+    size_mb: 256
+    iters: 20
+    min_gbs: 8
+  # Expected PCIe link width for platforms that wire GPUs below the card max
+  # BY DESIGN (AWS g4dn: T4 x8 of x16). null = strict check (current < max
+  # raises an issue); set to e.g. 8 to accept x8 as the platform norm — a
+  # link BELOW the declared width still flags. Pair with a lower
+  # pcie_bw.min_gbs on such platforms (x8 gen3 does ~6 GB/s practical).
+  pcie_expected_width: null
+  # Rewrite the benchmark VM apt sources from http:// to https:// before
+  # installing the CUDA toolkit / DCGM, and prefer the distro toolkit package
+  # over the NVIDIA-repo one. For networks where port 80 to the Ubuntu
+  # archive is refused upstream and/or the NVIDIA CDN is throttled to KB/s
+  # (both observed on a lab: 443 at 11 MB/s while 80 was connection-refused).
+  # The rewrite happens INSIDE the disposable VM only. Leave false when VMs
+  # use a local http-only mirror.
+  vm_apt_https: false
+  # Functional API conformance suite, run once per (host, model) VM against the
+  # served OpenAI-compatible endpoint: chat completions, streaming, max_tokens
+  # honored, clean 4xx on invalid model / context overflow (server must survive),
+  # concurrent-request isolation. Any failed test flags the model.
+  functional:
+    enabled: true
+  # Sample power draw / SM clock / temperature on the GPU while GuideLLM runs;
+  # yields avg/max power, max temp, min clock and tokens-per-watt (efficiency).
+  power_sampling:
+    enabled: true
+    interval_s: 5
+  # Seconds to wait for the appliance to start serving the model.
+  serve_timeout_s: 1200
+  fail_on_flag: false
