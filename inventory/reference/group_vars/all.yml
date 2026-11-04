@@ -18,6 +18,9 @@ ansible_ssh_private_key_file: '<ssh_key>'
 
 validation:
 
+  # Opt-in observability checks; see docs/observability.md for the read-only entrypoint.
+  run_observability: false
+
   # MULTI-CLUSTER SUPPORT
   # Every OpenNebula cluster that has at least one host is validated
   # automatically: VM-creating tests run once per cluster using only that

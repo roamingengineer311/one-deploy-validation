@@ -1,0 +1,52 @@
+---
+# Safe standalone entrypoint: deliberately does not import validation.yml.
+- ansible.builtin.import_playbook: observability_checks.yml
+  vars:
+    odv_observability_requested: true
+
+- name: Render observability results on the controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tags: [always]
+  vars:
+    observability_report_path: /tmp/observability-report
+  tasks:
+    - name: Collect observability findings from every host
+      ansible.builtin.set_fact:
+        observability_results: >-
+          {%- set ns = namespace(rows=[]) -%}
+          {%- for host in groups['all'] -%}
+            {%- for key, value in (hostvars[host].verification_result | d({})).items() -%}
+              {%- if key.startswith('Observability / ') -%}
+                {%- set ns.rows = ns.rows + [{'key': key, 'value': value,
+                  'comment': (hostvars[host].verification_comments | d({})).get(key, '')}] -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+          {{ ns.rows }}
+
+    - name: Save JSON report (controller only)
+      ansible.builtin.copy:
+        dest: "{{ observability_report_path }}.json"
+        content: "{{ observability_results | to_nice_json }}"
+        mode: '0600'
+
+    - name: Save HTML report (controller only)
+      ansible.builtin.template:
+        src: observability-report.html.j2
+        dest: "{{ observability_report_path }}.html"
+        mode: '0600'
+
+    - name: Print report location
+      ansible.builtin.debug:
+        msg: "Observability reports: {{ observability_report_path }}.html and .json"
+
+    - name: Fail after reporting when checks failed or inventory selected no hosts
+      ansible.builtin.assert:
+        that:
+          - observability_results | length > 0
+          - observability_results | selectattr('value', 'equalto', 'failed') | list | length == 0
+        fail_msg: "Observability validation failed; inspect the generated report."
+      when: observability_fail_on_error | d(true) | bool

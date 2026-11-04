@@ -1,0 +1,17 @@
+---
+# Credentials belong in observability_auth (prefer Ansible Vault), never validation.
+observability_defaults:
+  require_grafana: true
+  timeout: 5
+  attempts: 3
+  delay: 2
+  max_sample_age: 120
+  validate_certs: true
+  prometheus_url: http://127.0.0.1:9090
+  alertmanager_url: http://127.0.0.1:9093
+  grafana_url: http://127.0.0.1:3000
+  grafana_datasource: prometheus
+  grafana_require_datasource_url: false
+  dashboards: [OpenNebula, Hosts, Virtual Machine]
+  exporters: {}
+  resource_metrics: {}

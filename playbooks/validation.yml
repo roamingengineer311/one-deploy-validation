@@ -1,4 +1,7 @@
 ---
+# Observe the original deployment before tests restart services or fence hosts.
+- ansible.builtin.import_playbook: observability_checks.yml
+
 - hosts: all
   tags: [always]
   vars:
@@ -24,6 +27,7 @@
       when:
         - not (_gb_pre | bool)
         - hostvars[groups[frontend_group | d('frontend')][0]]['ansible_host'] == ansible_host
+        - not (validation.observability_only | d(false) | bool)
 
 - hosts: "{{ node_group | d('node') }}"
   vars:
@@ -99,7 +103,9 @@
     _gb_pre: "{{ (gpu_benchmark_phase | d((gpu_benchmark | d({})).phase | d('post'), true)) == 'pre' }}"
   roles:
     - role: network-benchmark
-      when: not (_gb_pre | bool)
+      when:
+        - not (_gb_pre | bool)
+        - validation.run_network_benchmark | d(true)
 
 # Validate DPDK PCI allowlist configuration on DPDK-enabled hypervisor hosts.
 # The expected PCI devices are derived from the deployment inventory and
@@ -187,7 +193,9 @@
         - name: Run OneFlow validation
           import_role:
             name: oneflow_validation
-          when: not (_gb_pre | bool)
+          when:
+            - not (_gb_pre | bool)
+            - validation.run_one_flow | d(true)
       rescue:
         - debug:
             msg: "OneFlow role failed, continue with the rest"
@@ -202,7 +210,9 @@
     _gb_pre: "{{ (gpu_benchmark_phase | d((gpu_benchmark | d({})).phase | d('post'), true)) == 'pre' }}"
   roles:
     - role: validation
-      when: not (_gb_pre | bool)
+      when:
+        - not (_gb_pre | bool)
+        - validation.run_core_services | d(true)
 
 # VM HA Validation — destructive (fences a hypervisor): runs AFTER every
 # non-destructive test so a powered-off node cannot fail their checks
@@ -252,7 +262,9 @@
     _gb_pre: "{{ (gpu_benchmark_phase | d((gpu_benchmark | d({})).phase | d('post'), true)) == 'pre' }}"
   roles:
     - role: validation_sweep
-      when: not (_gb_pre | bool)
+      when:
+        - not (_gb_pre | bool)
+        - not (validation.observability_only | d(false) | bool)
 
 - hosts: localhost
   tags: [always]
@@ -456,6 +468,19 @@
         - hostvars[item].verification_result is defined
 
 
+    - name: Fold observability findings from all hosts into the report
+      ansible.builtin.set_fact:
+        report_verification_result: >-
+          {{ (report_verification_result | default({}))
+             | combine(hostvars[item].verification_result | default({}) | dict2items
+                       | selectattr('key', 'match', '^Observability / ') | items2dict) }}
+        report_verification_comments: >-
+          {{ (report_verification_comments | default({}))
+             | combine(hostvars[item].verification_comments | default({}) | dict2items
+                       | selectattr('key', 'match', '^Observability / ') | items2dict) }}
+      loop: "{{ groups['all'] }}"
+      when: hostvars[item].verification_result is defined
+
     - name: Collect run manifest, sweep results and leftovers from all hosts
       # Audit-trail aggregation for the 'Execution & Cleanup Summary' section.
       # Every fact defaults to [] so hosts that registered nothing are no-ops.
@@ -516,6 +541,14 @@
           {%- endfor -%}
           {{ out }}
 
+    - name: Group monitoring results for report presentation
+      ansible.builtin.set_fact:
+        monitoring_report: >-
+          {{ report_verification_result | observability_report(
+               report_verification_comments,
+               groups[frontend_group | d('frontend')] | d([]),
+               groups[node_group | d('node')] | d([])) }}
+
     - name: Render report
       template:
         src: "appendix-cloud-report.j2"
@@ -524,8 +557,10 @@
         repo_version: "{{ repo_version_cmd.stdout }}"
         date: "{{ lookup('pipe', 'date +%Y-%m-%d\\ %H:%M:%S') }}"
         report_date_only: "{{ lookup('pipe', 'date +%Y-%m-%d') }}"
-        verification_result: "{{ report_verification_result }}"
-        verification_comments: "{{ report_verification_comments }}"
+        verification_result: "{{ monitoring_report.results }}"
+        verification_comments: "{{ monitoring_report.comments }}"
+        monitoring_labels: "{{ monitoring_report.labels }}"
+        monitoring_sections: "{{ monitoring_report.sections }}"
         network_verification_results: "{{ report_network_verification_results }}"
         conn_results_matrix: "{{ hostvars[report_frontend_host].conn_results_matrix | default({}) }}"
         report_manifest: "{{ hostvars['localhost'].report_manifest | default([]) }}"

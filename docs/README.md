@@ -26,3 +26,5 @@ See the [test catalog](../README.md#test-catalog) in the main README for enabler
 
 - [Shared services & harness internals](validation_common.md)
 - [Cleanup sweep & preclean](validation_sweep.md)
+
+- [Observability validation (read-only)](observability.md)

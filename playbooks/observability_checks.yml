@@ -1,0 +1,36 @@
+---
+# Shared by the full suite and the standalone entrypoint.
+# Read-only by default; the optional VM scenario requires explicit opt-in.
+- name: Observe services on frontend, node and Grafana hosts
+  hosts: "{{ frontend_group | d('frontend') }}:{{ node_group | d('node') }}:{{ grafana_group | d('grafana') }}"
+  gather_facts: false
+  tags: [observability]
+  roles:
+    - role: observability_validation
+      when: odv_observability_requested | d((validation | d({})).run_observability | d(false)) | bool
+
+- name: Observe Prometheus data after all local probes finish
+  hosts: "{{ frontend_group | d('frontend') }}"
+  gather_facts: false
+  tags: [observability]
+  tasks:
+    - name: Run Prometheus observability checks
+      ansible.builtin.import_role:
+        name: observability_validation
+        tasks_from: prometheus.yml
+      when: odv_observability_requested | d((validation | d({})).run_observability | d(false)) | bool
+
+- name: Validate metrics of an existing or temporary VM
+  hosts: "{{ frontend_group | d('frontend') }}"
+  gather_facts: false
+  tags: [observability]
+  tasks:
+    - name: Run optional VM metrics scenario once
+      ansible.builtin.include_role:
+        name: observability_validation
+        tasks_from: vm.yml
+      run_once: true
+      when:
+        - odv_observability_requested | d((validation | d({})).run_observability | d(false)) | bool
+        - (observability_vm | d({})).enabled | d(false) | bool
+        - not ansible_check_mode

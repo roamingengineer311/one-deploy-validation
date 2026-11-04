@@ -173,3 +173,11 @@ The one deliberately special case is the hypervisor fenced by the
 cleaned and re-enabled automatically at the end of the test; without it the
 node is left OFFLINE on purpose and the report carries the exact manual
 recovery runbook. See [docs/vm-ha.md](./docs/vm-ha.md).
+
+## Observability validation
+
+Use `make observability I=/path/to/deployment-inventory.yml` for read-only service,
+exporter, Prometheus, Alertmanager and Grafana checks with HTML/JSON reports.
+This entrypoint does not run the full suite cleanup or restart services.
+Set `validation.run_observability: true` to also include checks in the full suite.
+See [configuration, coverage and limitations](docs/observability.md).

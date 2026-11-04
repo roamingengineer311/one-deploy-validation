@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Observability validation</title>
+<style>body{font:15px system-ui;margin:2rem;color:#182332}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:.6rem;text-align:left}th{background:#eef3f8}.failed{background:#ffeded}.ok{background:#eef9ee}pre{white-space:pre-wrap}</style></head>
+<body><h1>Observability validation</h1><p>Read-only probes. Skipped checks are not evidence of a working component.</p>
+<p>{{ observability_results | length }} findings;
+{{ observability_results | selectattr('value', 'equalto', 'failed') | list | length }} failed.</p>
+<table><thead><tr><th>Check</th><th>Result</th><th>Evidence</th></tr></thead><tbody>
+{% for row in observability_results %}
+<tr class="{{ ('ok' if row.value == 'ok' else 'failed' if row.value == 'failed' else 'skipped') }}"><td>{{ row.key | e }}</td><td>{{ row.value | e }}</td><td>{{ row.comment | e }}</td></tr>
+{% endfor %}
+</tbody></table></body></html>

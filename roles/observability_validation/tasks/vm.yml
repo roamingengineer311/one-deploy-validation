@@ -1,0 +1,105 @@
+---
+# Explicit opt-in. Run on one frontend to avoid creating one VM per HA member.
+- name: Validate VM scenario settings
+  ansible.builtin.assert:
+    that:
+      - (observability_vm.vm_id is defined) != (observability_vm.template_id is defined)
+      - (observability_vm.vm_id | d(observability_vm.template_id | d('')) | string) is match('^[0-9]+$')
+    fail_msg: "Set exactly one numeric observability_vm.vm_id or observability_vm.template_id."
+
+- name: Initialize VM scenario
+  ansible.builtin.set_fact:
+    odv_obs_vm_id: "{{ observability_vm.vm_id | d('') }}"
+    odv_obs_vm_name: >-
+      odv-monitoring-{{ lookup('pipe', 'python3 -c "import uuid; print(uuid.uuid4().hex)"') }}
+
+- name: Check metrics for the selected VM
+  block:
+    - name: Instantiate a temporary VM from the supplied template
+      become: true
+      become_user: oneadmin
+      ansible.builtin.command:
+        argv: [onetemplate, instantiate, "{{ observability_vm.template_id | string }}", --name, "{{ odv_obs_vm_name }}"]
+      register: odv_obs_vm_create
+      when: observability_vm.vm_id is not defined
+
+    - name: Capture created VM ID
+      ansible.builtin.set_fact:
+        odv_obs_vm_id: "{{ odv_obs_vm_create.stdout | regex_search('VM ID: ([0-9]+)', '\\1') | first }}"
+      when: observability_vm.vm_id is not defined
+
+    - name: Wait for RUNNING and VM metrics with matching labels
+      observability_probe:
+        phase: vm
+        config: "{{ odv_observability_config | combine({'vm_id': odv_obs_vm_id}) }}"
+        auth: "{{ observability_auth | d({}) }}"
+      register: odv_obs_vm_probe
+      until: odv_obs_vm_probe.results is defined and odv_obs_vm_probe.results | length == 1 and odv_obs_vm_probe.results[0].value == 'ok'
+      retries: "{{ observability_vm.retries | d(30) }}"
+      delay: "{{ observability_vm.delay | d(10) }}"
+      changed_when: false
+
+    - name: Record VM metrics result
+      ansible.builtin.include_tasks: record.yml
+      loop: "{{ odv_obs_vm_probe.results }}"
+      loop_control:
+        loop_var: obs_result
+
+  rescue:
+    - name: Show VM metrics failure details
+      ansible.builtin.debug:
+        msg: "{{ (odv_obs_vm_probe | d({})).results | d('VM creation or probe execution failed; see task output.') }}"
+
+    - name: Record failed VM metrics scenario
+      ansible.builtin.include_role:
+        name: validation_common
+        tasks_from: record_result.yml
+      vars:
+        result_key: "Observability / {{ inventory_hostname }} / VM metrics present"
+        result_value: failed
+        result_comment: >-
+          VM {{ odv_obs_vm_id | default('unknown') }}:
+          {{ ((odv_obs_vm_probe | d({})).results | d([{'comment': 'VM creation or probe execution failed; see task output.'}]))[0].comment }}
+
+  always:
+    - name: Terminate only the VM created by this scenario
+      become: true
+      become_user: oneadmin
+      ansible.builtin.command:
+        argv: [onevm, terminate, --hard, "{{ odv_obs_vm_name }}"]
+      register: odv_obs_vm_cleanup
+      failed_when: false
+      when:
+        - observability_vm.vm_id is not defined
+        - odv_obs_vm_create is defined
+        - odv_obs_vm_create.rc | d(1) == 0
+
+    - name: Wait for the temporary VM to reach DONE
+      become: true
+      become_user: oneadmin
+      ansible.builtin.command:
+        argv: [onevm, show, "{{ odv_obs_vm_id | string }}", --json]
+      register: odv_obs_vm_done
+      changed_when: false
+      until: >-
+        odv_obs_vm_done.rc == 0 and
+        ((odv_obs_vm_done.stdout | from_json).VM.STATE | string) == '6'
+      retries: 12
+      delay: 5
+      ignore_errors: true
+      when:
+        - observability_vm.vm_id is not defined
+        - odv_obs_vm_cleanup.rc | d(1) == 0
+        - (odv_obs_vm_id | string) is match('^[0-9]+$')
+
+    - name: Record VM cleanup failure
+      ansible.builtin.include_role:
+        name: validation_common
+        tasks_from: record_result.yml
+      vars:
+        result_key: "Observability / {{ inventory_hostname }} / VM cleanup"
+        result_value: failed
+        result_comment: "Could not terminate {{ odv_obs_vm_name }} (ID {{ odv_obs_vm_id }}); manual cleanup required."
+      when: >-
+        (odv_obs_vm_cleanup.rc | d(0)) != 0 or
+        ((odv_obs_vm_done | d({})).failed | d(false))
